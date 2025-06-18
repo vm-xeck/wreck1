@@ -1,0 +1,30 @@
+func main(): int8 {
+    var aiu: bool :: true
+    var i: int8 :: 5
+    while(i > 0) {
+        const dif: int8 :: 2
+        do i <- i - dif
+    }
+    if(i < 23) {
+        do i <- 0
+    } elif(i > 100) {
+        do i <- i - 10
+    } else {
+        if(!aiu) {
+            var uwa__: bool :: !aiu + aiu
+            do aiu <- true
+            if(i > 10) {
+                do global <- global + 3
+            } else {
+                do global <- 0
+            }
+        }
+        do i <- i - 100
+    }
+    do aiu <- false
+    const nothing: int64 :: 0
+    do 3 + 2
+    return global + global
+}
+
+var global: int8 :: 32

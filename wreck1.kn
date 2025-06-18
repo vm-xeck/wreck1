@@ -1,0 +1,232 @@
++enum Type
+    undetermined
+    bool_
+    int8
+    int16
+    int32
+    int64
+    uint8
+    uint16
+    uint32
+    uint64
+    float32
+    float64
+    struct {TODO: dounika, array?}
+end enum
++func strToType(str: []char): @Type
+    switch(str)
+    case "bool"
+        ret %bool_
+    case "int8"
+        ret %int8
+    case "int16"
+        ret %int16
+    case "int32"
+        ret %int32
+    case "int64"
+        ret %int64
+    case "uint8"
+        ret %uint8
+    case "uint16"
+        ret %uint16
+    case "uint32"
+        ret %uint32
+    case "uint64"
+        ret %uint64
+    case "float32"
+        ret %float32
+    case "float64"
+        ret %float64
+    default
+        ret %struct
+    end switch
+end func
++func typeToStr(type: @Type): []char
+    switch(type)
+    case %bool_
+        ret "bool"
+    case %int8
+        ret "int8"
+    case %int16
+        ret "int16"
+    case %int32
+        ret "int32"
+    case %int64
+        ret "int64"
+    case %uint8
+        ret "uint8"
+    case %uint16
+        ret "uint16"
+    case %uint32
+        ret "uint32"
+    case %uint64
+        ret "uint64"
+    case %float32
+        ret "float32"
+    case %float64
+        ret "float64"
+    case %struct
+        ret "struct"
+    case %undetermined
+        ret "(undetermined)"
+    end switch
+end func
++func isPossibleLiteral(literal: []char, type: @Type): bool
+    if(literal="true" | literal="false")
+        ret type = %bool_
+    end if
+    var castable: bool
+    switch(type)
+    case %int8, %int16, %int32, %int64
+        do literal.toInt(&castable)
+        ret castable
+    case %uint8, %uint16, %uint32, %uint64 {現時点でint系と同じ}
+        do literal.toInt(&castable)
+        ret castable
+    case %float32, %float64
+        do literal.toFloat(&castable)
+        ret castable
+    end switch
+    ret false
+end func
++func defaultValue(type: @Type): []char
+    switch(type)
+    case %bool_
+        ret "false"
+    case %int8
+        ret "0"
+    case %int16
+        ret "0"
+    case %int32
+        ret "0"
+    case %int64
+        ret "0"
+    case %uint8
+        ret "0"
+    case %uint16
+        ret "0"
+    case %uint32
+        ret "0"
+    case %uint64
+        ret "0"
+    case %float32
+        ret "0.0"
+    case %float64
+        ret "0.0"
+    default
+        ret "" {TODO: struct->null | array->?(maybe [] or null) | else->???}
+    end switch
+end func
+
++class Ast()
+    +var stmts: list<@StmtNode>
+    *func ctor()
+        do me.stmts :: #list<@StmtNode>
+    end func
+end class
+
++class StmtNode()
+    +var kind: []char
+    +var name: []char
+    +var args: list<StmtNode>
+    +var type: @Type
+    +var expr: @ExprNode
+    +var stmts: list<StmtNode>
+    +var branch: StmtNode
+    *func ctor()
+        do me.args :: #list<StmtNode>
+        do me.stmts :: #list<StmtNode>
+    end func
+end class
+
++class ExprNode()
+    +var value: []char {operator=>symbol | var-ref|func-call=>name | else=>value}
+    +var type: @Type
+    +var lhs: ExprNode
+    +var rhs: ExprNode
+    +var args: list<ExprNode>
+    *func ctor()
+        do me.args :: #list<ExprNode>
+    end func
+    +func depth(): int
+        var l: int
+        var r: int
+        if(!\util@isNull(me.lhs))
+            do l :: me.lhs.depth()
+        end if
+        if(!\util@isNull(me.rhs))
+            do r :: me.rhs.depth()
+        end if
+        ret lib@max(l, r) + 1
+    end func
+end class
++func makeExprNode(value: []char, lhs: @ExprNode, rhs: @ExprNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.value :: value
+    do node.lhs :: lhs
+    do node.rhs :: rhs
+    var l: @Type
+    var r: @Type
+    if(!\util@isNull(node.lhs))
+        do l :: node.lhs.type
+    end if
+    if(!\util@isNull(node.rhs))
+        do r :: node.rhs.type
+    end if
+    if(l<>%undetermined & r<>%undetermined & l<>r)
+        do @exprTypeMismatch(node)
+    end if
+    do node.type :: lib@max(l$int, r$int) $ @Type
+    ret node
+end func {TODO: 型決めパートいらない気がする}
++func makeExprLeaf(value: []char): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.value :: value
+    ret node
+end func
++func exprTypeMismatch(node: @ExprNode)
+    do \util@crash("Type mismatch: attempted \{node.lhs.value}: \{@typeToStr(node.lhs.type)} \{node.value} \{node.rhs.value}: \{@typeToStr(node.rhs.type)}")
+end func
+
+
++class Namespace()
+    +var name: []char
+    +var type: @Type
+    +var argTypes: []@Type
+    +var names: list<Namespace>
+    +var count: int
+    +var isMutable: bool
+    +var isRoot: bool
+    +var parent: Namespace
+    *func ctor()
+        do me.name :: ""
+        do me.argTypes :: #[0]@Type
+        do me.names :: #list<Namespace>
+    end func
+    +func get(name: []char, existed: &bool): Namespace
+        do me.names.head()
+        while search(!me.names.term())
+            if(me.names.get().name = name)
+                do existed :: true
+                break search
+            end if
+            do me.names.next()
+        end while
+        if(existed)
+            ret me.names.get()
+        else
+            if(me.isRoot)
+                ret #Namespace
+            end if
+            ret me.parent.get(name, &existed)
+        end if
+    end func
+    +func exist(name: []char): bool
+        var existed: bool
+        do me.get(name, &existed)
+        ret existed
+    end func
+    +func typeOf(name: []char): @Type
+        ret me.get(name, &).type
+    end func
+end class

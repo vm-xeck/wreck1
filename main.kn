@@ -1,0 +1,11 @@
+func main()
+    var filename: []char :: lib@cmdLine()[0]
+    var reader: file@Reader :: file@makeReader(filename)
+    do reader.delimiter(#[0]char)
+    var code: []char :: reader.readStr()
+
+    var tokens: list<[]char> :: \lex@tokenize(code)
+    var ast: \wreck1@Ast :: \stx@parse(tokens)
+    var metadata: \wreck1@Namespace :: \type@makeMetadata(ast)
+    do \out@printLlvm(ast, metadata)
+end func

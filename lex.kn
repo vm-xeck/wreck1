@@ -1,0 +1,112 @@
++func tokenize(code: []char): list<[]char>
+    var tokens: list<[]char> :: #list<[]char>
+    var i: int :: 0
+
+    while(i < ^code)
+        switch(code[i])
+        case 'A' to 'Z', 'a' to 'z'
+            do tokens.add(@eatAlnum(code, &i))
+        case '0' to '9'
+            do tokens.add(@eatNum(code, &i))
+        case '#'
+            do @dropComment(code, &i)
+        case ' ', '\t', '\n'
+            do i :+ 1
+        default {symbols}
+            do tokens.add(@eatSymbol(code, &i))
+        end switch
+    end while
+
+    ret @arrange(tokens)
+end func
+
+
+func arrange(tokens: list<[]char>): list<[]char>
+    var result: list<[]char> :: #list<[]char>
+    do tokens.head()
+    while(!tokens.term())
+        if(tokens.get()="<" | tokens.get()=">") {"<>" | "<=" | ">=" | "<-"}
+            var buf: []char :: tokens.get()
+            do tokens.next()
+            do buf :~ tokens.get()
+            if(buf="<>" | buf="<=" | buf=">=" | buf="<-")
+                do result.add(buf)
+            else
+                do tokens.prev()
+                do result.add(tokens.get())
+            end if
+        elif(\util@isNum(tokens.get()[0])) {float literals}
+            var buf: []char :: tokens.get()
+            do tokens.next()
+            if(tokens.term())
+                do tokens.tail()
+                do result.add(tokens.get())
+            elif(tokens.get() = ".")
+                do buf :~ tokens.get()
+                do tokens.next()
+                do buf :~ tokens.get()
+                do result.add(buf)
+            else
+                do tokens.prev()
+                do result.add(tokens.get())
+            end if
+        elif(\util@isAlpha(tokens.get()[0])) {identifier}
+            var buf: []char :: tokens.get()
+            do tokens.next()
+            while loop(!tokens.term())
+                if(tokens.get() = "_")
+                    while(tokens.get() = "_")
+                        do buf :~ tokens.get()
+                        do tokens.next()
+                    end while
+                else
+                    break loop
+                end if
+                if(\util@isAlpha(tokens.get()[0]))
+                    do buf :~ tokens.get()
+                    do tokens.next()
+                end if
+            end while
+            do tokens.prev()
+            do result.add(buf)
+        else
+            do result.add(tokens.get())
+        end if
+        do tokens.next()
+    end while
+    ret result
+end func
+
+
+func eatAlnum(code: []char, i: &int): []char
+    var token: []char :: ""
+    while(i<^code & \util@isAlnum(code[i]))
+        do token :~ code[i].toStr()
+        do i :+ 1
+    end while
+    ret token
+end func
+
+func eatNum(code: []char, i: &int): []char
+    var token: []char :: ""
+    while(i<^code & \util@isNum(code[i]))
+        do token :~ code[i].toStr()
+        do i :+ 1
+    end while
+    ret token
+end func
+
+func dropComment(code: []char, i: &int)
+    if(code[i] = '#') {念のため確認}
+        do i :+ 1
+    end if
+    while(code[i] <> '#')
+        do i :+ 1
+    end while
+    do i :+ 1 {'#'の次を指して返す}
+end func
+
+func eatSymbol(code: []char, i: &int): []char {1文字読むだけ。TODO:名前変えるかも？}
+    do i :+ 1
+    ret code[i-1].toStr()
+end func

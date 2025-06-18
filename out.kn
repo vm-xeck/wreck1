@@ -1,0 +1,389 @@
++func printLlvm(ast: \wreck1@Ast, namespace: \wreck1@Namespace)
+    var init: []char :: "define void @_() {\n"
+    do ast.stmts.head()
+    while(!ast.stmts.term())
+        switch(ast.stmts.get().kind)
+        case "func"
+            do cui@print(@funcToLlvm(ast.stmts.get(), namespace))
+        case "var"
+            do cui@print(@varToLlvm(ast.stmts.get(), namespace, &init))
+        case "const"
+            do cui@print(@constToLlvm(ast.stmts.get(), namespace, &init))
+        default
+            do \util@crash("Couldn't LLVMize unknown stmt kind: \{ast.stmts.get().kind}")
+        end switch
+        do ast.stmts.next()
+    end while
+    do init :~ "ret void\n"
+    do init :~ "}\n"
+    do cui@print(init)
+end func
+
+func wt2lt(type: \wreck1@Type): []char
+    switch(type)
+    case %bool_
+        ret "i1"
+    case %int8, %uint8
+        ret "i8"
+    case %int16, %uint16
+        ret "i16"
+    case %int32, %uint32
+        ret "i32"
+    case %int64, %uint64
+        ret "i64"
+    case %float32
+        ret "float"
+    case %float64
+        ret "double"
+    default
+        do \util@crash("Invalid type: Type (\{\wreck1@typeToStr(type)}) has no corresponding LLVM type")
+        ret ""
+    end switch
+end func
+
+func stmtToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    switch(node.kind)
+    case "func"
+        ret @funcToLlvm(node, parent)
+    case "var"
+        ret @varToLlvm(node, parent, &)
+    case "const"
+        ret @constToLlvm(node, parent, &)
+    case "while"
+        ret @whileToLlvm(node, parent)
+    case "if"
+        ret @ifToLlvm(node, parent)
+    case "return"
+        ret @returnToLlvm(node, parent)
+    case "do"
+        ret @doToLlvm(node, parent)
+    default
+        do \util@crash("Invalid stmt kind: \{node.kind}")
+        ret ""
+    end switch
+end func
+
+func funcToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    var llvm: []char :: ""
+    do node.args.head()
+    var argAry: [][]char :: #[0,0]char
+    while(!node.args.term())
+        do argAry :~ ["%\{node.args.get().name} \{@wt2lt(node.args.get().type)}"]
+        do node.args.next()
+    end while
+    var args: []char :: argAry.join(", ")
+    do llvm :~ "define \{@wt2lt(node.type)} @\{node.name}(\{args}) {\n"
+    if(node.name = "main")
+        do llvm :~ "call void @_()\n"
+    end if
+    var myMetadata: \wreck1@Namespace :: parent.get(node.name, &)
+    do node.stmts.head()
+    while(!node.stmts.term())
+        do llvm :~ @stmtToLlvm(node.stmts.get(), myMetadata)
+        do node.stmts.next()
+    end while
+    do llvm :~ "}\n"
+    ret llvm
+end func
+
+func varToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]char): []char
+    var llvm: []char :: ""
+    if(parent.isRoot)
+        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}\n"
+        if(!\util@isNull(node.expr))
+            do \type@type(node.expr, node.type, parent)
+            do init :~ @exprToLlvm(node.expr, parent)
+            do init :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr @\{node.name}\n"
+        end if
+    else
+        do llvm :~ "%\{node.name} = alloca \{@wt2lt(node.type)}\n"
+        if(!\util@isNull(node.expr))
+            do \type@type(node.expr, node.type, parent)
+            do llvm :~ @exprToLlvm(node.expr, parent)
+            do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr %\{node.name}\n"
+        else
+            do llvm :~ "store \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}, ptr %\{node.name}\n"
+        end if
+    end if
+
+    ret llvm
+end func
+
+func constToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]char): []char
+    var llvm: []char :: ""
+    if(parent.isRoot)
+        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}\n"
+        if(!\util@isNull(node.expr))
+            do \type@type(node.expr, node.type, parent)
+            do init :~ @exprToLlvm(node.expr, parent)
+            do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr @\{node.name}\n"
+        end if
+    else
+        do llvm :~ "%\{node.name} = alloca \{@wt2lt(node.type)}\n"
+        if(!\util@isNull(node.expr))
+            do \type@type(node.expr, node.type, parent)
+            do llvm :~ @exprToLlvm(node.expr, parent)
+            do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr %\{node.name}\n"
+        else
+            do llvm :~ "store \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}, ptr %\{node.name}\n"
+        end if
+    end if
+
+    ret llvm
+end func
+
+func whileToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    var myMetadata: \wreck1@Namespace :: parent.get(node.name, &)
+    do myMetadata.type :: parent.type
+    do myMetadata.count :: parent.count
+    var label: []char :: node.name
+
+    var llvm: []char :: "br label %\{label}.cond\n"
+    do llvm :~ "\{label}.cond:\n"
+    do \type@type(node.expr, node.type, myMetadata)
+    do llvm :~ @exprToLlvm(node.expr, myMetadata)
+    do llvm :~ "br i1 %\{myMetadata.count}, label %\{label}.body, label %\{label}.end\n"
+    do llvm :~ "\{label}.body:\n"
+    do node.stmts.head()
+    do myMetadata.names.head()
+    while(!node.stmts.term())
+        do llvm :~ @stmtToLlvm(node.stmts.get(), myMetadata)
+        do node.stmts.next()
+        do myMetadata.names.next()
+    end while
+    do llvm :~ "br label %\{label}.cond\n"
+    do llvm :~ "\{label}.end:\n"
+
+    do parent.count :: myMetadata.count
+    do parent.names.next()
+    ret llvm
+end func
+
+func ifToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    var myMetadata: \wreck1@Namespace
+    var origLabel: []char :: node.name
+    var label: []char
+
+    var llvm: []char :: "br label %\{origLabel}.cond\n"
+
+    while(!\util@isNull(node))
+        do label :: node.name
+        do myMetadata :: parent.get(node.name, &)
+        do myMetadata.type :: parent.type
+        do myMetadata.count :: parent.count
+
+        if(node.kind="if" | node.kind="elif")
+            do llvm :~ "\{label}.cond:\n"
+            do \type@type(node.expr, node.type, myMetadata)
+            do llvm :~ @exprToLlvm(node.expr, myMetadata)
+            var nextLabel: []char :: ""
+            if(\util@isNull(node.branch))
+                do nextLabel :: "\{origLabel}.end"
+            elif(node.branch.kind = "elif")
+                do nextLabel :: "\{node.branch.name}.cond"
+            elif(node.branch.kind = "else")
+                do nextLabel :: "\{node.branch.name}.body"
+            else {impossible!!}
+                do \util@crash("Invalid branch kind: \{node.branch.kind}")
+            end if
+            do llvm :~ "br i1 %\{myMetadata.count}, label %\{label}.body, label %\{nextLabel}\n"
+        end if
+
+        do llvm :~ "\{label}.body:\n"
+        do node.stmts.head()
+        do myMetadata.names.head()
+        while(!node.stmts.term())
+            do llvm :~ @stmtToLlvm(node.stmts.get(), myMetadata)
+            do node.stmts.next()
+            do myMetadata.names.next()
+        end while
+        do llvm :~ "br label %\{origLabel}.end\n"
+        do parent.count :: myMetadata.count
+        do node :: node.branch
+    end while
+
+    do llvm :~ "\{origLabel}.end:\n"
+    ret llvm
+end func
+
+func returnToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    do \type@type(node.expr, parent.type, parent)
+    var llvm: []char :: @exprToLlvm(node.expr, parent)
+    do llvm :~ "ret \{@wt2lt(parent.type)} %\{parent.count}\n"
+    ret llvm
+end func
+
+func doToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    do \type@type(node.expr, %undetermined, parent)
+    ret @exprToLlvm(node.expr, parent)
+end func
+
+
+func exprToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
+    var llvm: []char :: ""
+
+    if(node.depth() <= 1) {末端}
+        if(node.value[^node.value-1] = '(') {func-call}
+            ret @callToLlvm(node, parent)
+        elif(node.value="true" | node.value="false") {bool literal. not a var}
+        elif(\util@isAlpha(node.value[0])) {var-ref | const-ref}
+            ret @refToLlvm(node, parent)
+        end if
+        ; if(!\wreck1@isPossibleLiteral(node.value, node.type))
+            ; do \util@crash("Value \{node.value} is not valid for type \{@wt2lt(node.type)}")
+        ; end if
+        switch(node.type) {literal}
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do parent.count :+ 1
+            ret "%\{parent.count} = add \{@wt2lt(node.type)} \{node.value}, \{\wreck1@defaultValue(node.type)}\n"
+        case %float32, %float64
+            do parent.count :+ 1
+            ret "%\{parent.count} = fadd \{@wt2lt(node.type)} \{node.value}, \{\wreck1@defaultValue(node.type)}\n"
+        case %undetermined
+            do \util@crash("Couldn't LLVMize: the type of the value \{node.value} is undetermined")
+            ret ""
+        default
+            do \util@crash("Unaccepted value: \{node.value} of type \{@wt2lt(node.type)}")
+            ret ""
+        end switch
+    end if
+
+    {lhsまたはrhsのどちらかのみnullみたいな演算子はいまのところ存在しない。}
+    {未来の自分へ: できればパース時にずるをして回避してください}
+    var lhs: int
+    var rhs: int
+
+    do llvm :~ exprToLlvm(node.lhs, parent)
+    do lhs :: parent.count
+    do llvm :~ exprToLlvm(node.rhs, parent)
+    do rhs :: parent.count
+
+
+    switch(node.value) {将来仕様を変える予定はないけど、いちおう冗長に書いておく}
+    case "<-"
+        var pfx: []char
+        var metadata: \wreck1@Namespace :: parent.get(node.lhs.value, &)
+        if(!metadata.isMutable)
+            do \util@crash("Substitution failure: \{node.lhs.value} is immutable")
+        end if
+        if(metadata.parent.isRoot)
+            do pfx :: "@"
+        else
+            do pfx :: "%"
+        end if
+        do llvm :~ "store \{@wt2lt(node.type)} %\{rhs}, ptr \{pfx}\{node.lhs.value}\n"
+    case "|"
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = or \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+    case "&"
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = and \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+    case "=", "<>", "<", "<=", ">", ">="
+        var opcode: []char
+        var cond: []char
+        switch(node.lhs.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do opcode :: "icmp"
+        case %float32, %float64
+            do opcode :: "fcmp"
+        end switch
+        switch(node.value)
+        case "="
+            do cond :: "eq"
+        case "<>"
+            do cond :: "ne"
+        default
+            switch(node.lhs.type)
+            case %int8, %int16, %int32, %int64
+                do cond :: "s"
+            case %bool_, %uint8, %uint16, %uint32, %uint64
+                do cond :: "u"
+            end switch
+            switch(node.value[0])
+            case '<'
+                do cond :~ "l"
+            case '>'
+                do cond :~ "g"
+            end switch
+            if(node.value[^node.value-1] = '=')
+                do cond :~ "e"
+            else
+                do cond :~ "t"
+            end if
+        end switch
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = \{opcode} \{cond} \{@wt2lt(node.lhs.type)} %\{lhs}, %\{rhs}\n"
+    case "+"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = add \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fadd \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "-"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = sub \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fsub \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "*"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = mul \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fmul \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "/"
+        do parent.count :+ 1
+        switch(node.type)
+        case %int8, %int16, %int32, %int64
+            do llvm :~ "%\{parent.count} = idiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %bool_, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = udiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fdiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    end switch
+    ret llvm
+end func
+
+func callToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
+    var llvm: []char :: ""
+    var name: []char :: node.value.sub(0, ^node.value-1) {末尾の'('をカット}
+    do node.args.head()
+    var existed: bool
+    var metadata: \wreck1@Namespace :: parent.get(node.value, &existed)
+    if(!existed)
+        do \util@crash("No such function: \{name}")
+    end if
+    var argExprs: [][]char :: #[0,0]char
+    do node.args.head()
+    while(!node.args.term())
+        do llvm :~ @exprToLlvm(node.args.get(), parent)
+        do argExprs :~ ["%\{parent.count}"]
+        do node.args.next()
+    end while
+    do parent.count :+ 1
+    do llvm :~ "%\{parent.count} = call \{@wt2lt(metadata.type)} @\{name}("
+    var args: [][]char :: #[0,0]char
+    for i(0, ^argExprs-1)
+        do args :~ ["\{@wt2lt(metadata.argTypes[i])} \{argExprs[i]}"]
+    end for
+    do llvm :~ "\{args.join(", ")})\n"
+    ret llvm
+end func
+
+func refToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
+    var existed: bool
+    var metadata: \wreck1@Namespace :: parent.get(node.value, &existed)
+    if(!existed)
+        do \util@crash("No such variable or constant: \{node.value}")
+    end if
+    var pfx: []char :: metadata.parent.isRoot?("@", "%")
+    do parent.count :+ 1
+    ret "%\{parent.count} = load \{@wt2lt(metadata.type)}, ptr \{pfx}\{node.value}\n"
+end func

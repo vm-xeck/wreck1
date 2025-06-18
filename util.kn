@@ -1,0 +1,25 @@
++func isAlpha(c: char): bool
+    ret (c>='A' & c<='Z') | (c>='a' & c<='z')
+end func
++func isNum(c: char): bool
+    ret c>='0'& c<='9'
+end func
++func isAlnum(c: char): bool
+    ret @isAlpha(c) | @isNum(c)
+end func
+
++func isNull(instance: kuin@Class): bool
+    ret instance =& null
+end func
+
++func crash(reason: []char)
+    do cui@print("Error: \{reason}\n")
+    do cui@flush()
+    assert false
+end func
+
++func expect(actual: []char, target: []char)
+    if(target <> actual)
+        do @crash("`\{target}` expected, but got `\{actual}`.")
+    end if
+end func
