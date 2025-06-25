@@ -1,30 +1,33 @@
 func main(): int8 {
     var aiu: bool :: true
-    var i: int8 :: 5
+    var i: int8 :: 5y
     while(i > 0) {
-        const dif: int8 :: 2
+        const dif: int8 :: 2y
         do i <- i - dif
     }
-    if(i < 23) {
-        do i <- 0
-    } elif(i > 100) {
-        do i <- i - 10
+    #ほとんど同じ型やないかーい#
+    const ijaaaa: uint32 :: 8um
+    var hogehogehoge: float32 :: 32323.f
+    if(i < 23y) {
+        do i <- 0y
+    } elif(i > 100y) {
+        do i <- i - 10y
     } else {
         if(!aiu) {
             var uwa__: bool :: !aiu + aiu
             do aiu <- true
-            if(i > 10) {
-                do global <- global + 3
+            if(i > 10y) {
+                do global <- global + 3y
             } else {
-                do global <- 0
+                do global <- 0y
             }
         }
-        do i <- i - 100
+        do i <- i - 100y
     }
     do aiu <- false
     const nothing: int64 :: 0
-    do 3 + 2
+    do 3us + 2us
     return global + global
 }
 
-var global: int8 :: 32
+var global: int8 :: 32y
