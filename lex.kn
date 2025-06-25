@@ -36,18 +36,21 @@ end enum
             case '(', ')', '{', '}', ',' {ktp.}
                 do tokens.add(c.toStr())
                 do buf :: ""
-            default {演算子。例外あるかも}
+            case ':', '|', '&', '=', '<', '>', '+', '-', '*', '/', '%', '!'
                 do tokenKind :: %op
                 do buf :: c.toStr()
+            default {謎}
+                do \util@crash("かんたん字句解析 しっぱい...: '\{c}'")
             end switch
         case %op
             ; TODO: 可能な演算子*のprefix*かどうか判定
-             ; 一覧-> ":", "::", "<-", "|", "&", "=", "<>", "<", "<=", ">", ">=", "+", "-", "*", "/", "%", "!"
-                ; do tokenKind :: %init
-                ; do tokens.add(op)
-                ; do buf :: ""
-            ; それ以外の場合はどうにか分割などする
-            ; ↓仮です
+            switch op(buf ~ [code[i]])
+            case "::", "<-", "<>", "<=", ">="
+                do tokens.add(op)
+                do buf :: ""
+                do tokenKind :: %init
+                skip i
+            end switch
             do tokens.add(buf)
             do buf :: ""
             do tokenKind :: %init

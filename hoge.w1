@@ -7,6 +7,7 @@ func main(): int8 {
     }
     #ほとんど同じ型やないかーい#
     const ijaaaa: uint32 :: 8um
+    var a____: uint64 :: 1u*-2u
     var hogehogehoge: float32 :: 32323.f
     if(i < 23y) {
         do i <- 0y
