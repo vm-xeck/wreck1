@@ -255,9 +255,6 @@ end func
 
 func parseUnary(tokens: list<[]char>): \wreck1@ExprNode
     switch(tokens.get())
-    case "+"
-        do tokens.next()
-        ret @parsePrimary(tokens)
     case "-"
         do tokens.next()
         ret \wreck1@makeExprNode("-", \wreck1@makeExprLeaf("0"), @parsePrimary(tokens))

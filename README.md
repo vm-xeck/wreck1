@@ -27,7 +27,7 @@ and = relational, { "&", relational };
 relational = add, { ( "=" | "<>" | "<" | "<=" | ">" | ">=" ), add };
 add = mul, { ( "+" | "-" ), mul };
 mul = unary, { ( "*" | "/" | "%" ), unary };
-unary = [ "+" | "-" | "!" ], primary;
+unary = [ "-" | "!" ], primary;
 primary = literal | var-ref | func-call | "(", expr, ")";
 
 type-name =
