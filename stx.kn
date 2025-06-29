@@ -76,7 +76,9 @@ func parseVar(tokens: list<[]char>): \wreck1@StmtNode
     do tokens.next()
     do node.type :: \wreck1@strToType(tokens.get())
     do tokens.next()
-    if(tokens.get() = "::")
+    if(tokens.get() = ":")
+        do tokens.next()
+        do \util@expect(tokens.get(), ":")
         do tokens.next()
         do node.expr :: @parseExpr(tokens)
     end if

@@ -1,0 +1,217 @@
+enum TypeInfo {どうしようね}
+    undecided
+
+    intic
+    floatic
+
+    decided
+end enum
+func cmp(infos: []@TypeInfo): int
+    if(^infos <= 1)
+        ret infos[0] $ int
+    end if
+    ret infos[0]$int * 10^(^infos-1) + cmp(infos.sub(1, -1))
+end func
+func isCompatibleInfo(info: @TypeInfo, type: \wreck1@Type): bool
+    switch(type)
+    case %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+        ret info = %intic
+    case %float32, %float64
+        ret info = %floatic
+    end switch
+    if(info = %undecided)
+        ret true
+    end if
+    ret false
+end func
+
++func type(node: \wreck1@ExprNode, stmtType: \wreck1@Type, metadata: \wreck1@Namespace)
+    switch info(@decideType(node, metadata))
+    case %decided {OK}
+    case %intic, %floatic, %undecided
+        if(stmtType = %undetermined) {いいよ}
+            switch(info)
+            case %intic
+                do @spread(%int64, node)
+            case %floatic
+                do @spread(%float64, node)
+            end switch
+        elif(@isCompatibleInfo(info, stmtType))
+            do @spread(stmtType, node)
+        else
+            do \util@crash("Expr expected to have type \{\wreck1@typeToStr(stmtType)} but doesn't")
+        end if
+    end switch
+end func
+
+func decideType(node: \wreck1@ExprNode, metadata: \wreck1@Namespace): @TypeInfo
+    if(node.depth() <= 1) {末端}
+        if(node.type <> %undetermined) {既に型がついている}
+            ret %decided
+        end if
+        {↓alphaではじまる系}
+        if(node.value[^node.value-1] = '(') {func-call。この方法かなりアレな気がする}
+            if(!metadata.exist(node.value))
+                do \util@crash("Could not type unknown function: \{node.value}")
+            end if
+            do node.type :: metadata.typeOf(node.value)
+            ret %decided
+        elif(node.value="true" | node.value="false")
+            do node.type :: %bool_
+            ret %decided
+        elif(\util@isAlpha(node.value[0])) {var-ref|const-ref。型だけ知りたい}
+            var existed: bool
+            var targetMetadata: \wreck1@Namespace :: metadata.get(node.value, &existed)
+            if(!metadata.exist(node.value))
+                do \util@crash("Could not type unknown variable | constant: \{node.value}")
+            end if
+            do node.type :: metadata.typeOf(node.value)
+            ret %decided
+        end if
+        {↓numではじまる系}
+        if(\wreck1@isPossibleLiteral(node.value, %int64)) {選択肢を絞れるだけ}
+            ret %intic
+        elif(\wreck1@isPossibleLiteral(node.value, %float64))
+            ret %floatic
+        end if
+        {????????}
+        do \util@crash("Failed o type unknown expr: \{node.value}")
+    end if
+
+    var lhs: @TypeInfo
+    var rhs: @TypeInfo
+    if(!\util@isNull(node.lhs))
+        do lhs :: decideType(node.lhs, metadata)
+    end if
+    if(!\util@isNull(node.rhs))
+        do rhs :: decideType(node.rhs, metadata)
+    end if
+
+    if(lhs=%decided & rhs=%decided)
+        if(node.lhs.type <> node.rhs.type)
+            do \wreck1@exprTypeMismatch(node)
+        end if
+        do node.type :: @opToReturnType(node.value, node.lhs.type)
+        ret %decided
+    elif(lhs = %decided)
+        if(!@isCompatibleInfo(rhs, node.lhs.type))
+            do \wreck1@exprTypeMismatch(node)
+        end if
+        do node.type :: @opToReturnType(node.value, node.lhs.type)
+        do @spread(node.lhs.type, node.rhs)
+        ret %decided
+    elif(rhs = %decided)
+        if(!@isCompatibleInfo(lhs, node.rhs.type))
+            do \wreck1@exprTypeMismatch(node)
+        end if
+        do node.type :: @opToReturnType(node.value, node.rhs.type)
+        do @spread(node.rhs.type, node.lhs)
+        ret %decided
+    end if
+    switch(@cmp([lhs, rhs]))
+    case @cmp([%intic, %floatic$@TypeInfo]), @cmp([%floatic, %intic$@TypeInfo])
+        do \wreck1@exprTypeMismatch(node)
+    case @cmp([%intic, %intic$@TypeInfo]), @cmp([%intic, %undecided$@TypeInfo]), @cmp([%undecided, %intic$@TypeInfo])
+        ret %intic
+    case @cmp([%floatic, %floatic$@TypeInfo]), @cmp([%floatic, %undecided$@TypeInfo]), @cmp([%undecided, %floatic$@TypeInfo])
+        ret %floatic
+    case @cmp([%undecided, %undecided$@TypeInfo])
+        ret %undecided
+    end switch
+    ret %undecided {上でぜんぶ網羅したはずだけど、warningを消すために}
+end func
+
+func spread(type: \wreck1@Type, node: \wreck1@ExprNode)
+    do node.type :: type
+    if(!\util@isNull(node.lhs))
+        do spread(type, node.lhs)
+    end if
+    if(!\util@isNull(node.rhs))
+        do spread(type, node.rhs)
+    end if
+end func
+
+func opToReturnType(op: []char, argType: \wreck1@Type): \wreck1@Type
+    switch(op)
+    case "=", "<>", "<", "<=", ">", ">="
+        ret %bool_
+    default
+        ret argType
+    end switch
+end func
+
+
++func makeMetadata(ast: \wreck1@Ast): \wreck1@Namespace
+    var root: \wreck1@Namespace :: #\wreck1@Namespace
+    do root.isRoot :: true
+    do ast.stmts.head()
+    do root.names :: @stmtsToMetadatas(ast.stmts, root)
+    ret root
+end func
+
+{debugv}
+func shapeOfMetadata(metadata: \wreck1@Namespace, indent: []char)
+    do cui@print("\{indent}\{(metadata.name="")?("(nameless)", metadata.name)}\n")
+    do cui@flush()
+    do metadata.names.head()
+    while(!metadata.names.term())
+        do shapeOfMetadata(metadata.names.get(), indent.replace("|", " ")~"|")
+        do metadata.names.next()
+    end while
+end func
+{debug^}
+
+func stmtsToMetadatas(stmts: list<\wreck1@StmtNode>, parent: \wreck1@Namespace): list<\wreck1@Namespace>
+    var result: list<\wreck1@Namespace> :: #list<\wreck1@Namespace>
+    do stmts.head()
+    while(!stmts.term())
+        var node: \wreck1@StmtNode :: stmts.get()
+        var ns: \wreck1@Namespace :: #\wreck1@Namespace
+        switch(node.kind)
+        case "func"
+            do ns.name :: node.name
+            do ns.type :: node.type
+            do node.args.head()
+            while(!node.args.term())
+                do ns.argTypes :~ [node.args.get().type]
+                do node.args.next()
+            end while
+            do ns.names :: stmtsToMetadatas(node.stmts, ns)
+            do ns.isRoot :: false
+            do ns.parent :: parent
+            do result.add(ns)
+        case "var"
+            do ns.name :: node.name
+            do ns.type :: node.type
+            do ns.isMutable :: true
+            do ns.isRoot :: false
+            do ns.parent :: parent
+            do result.add(ns)
+        case "const"
+            do ns.name :: node.name
+            do ns.type :: node.type
+            do ns.isMutable :: false
+            do ns.isRoot :: false
+            do ns.parent :: parent
+            do result.add(ns)
+        case "while"
+            do ns.name :: node.name
+            do ns.names :: stmtsToMetadatas(node.stmts, ns)
+            do ns.isRoot :: false
+            do ns.parent :: parent
+            do result.add(ns)
+        case "if"
+            while(!\util@isNull(node))
+                do ns :: #\wreck1@Namespace
+                do ns.name :: node.name
+                do ns.names :: stmtsToMetadatas(node.stmts, ns)
+                do ns.isRoot :: false
+                do ns.parent :: parent
+                do result.add(ns)
+                do node :: node.branch
+            end while
+        end switch
+        do stmts.next()
+    end while
+    ret result
+end func

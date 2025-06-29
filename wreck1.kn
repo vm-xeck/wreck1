@@ -1,62 +1,121 @@
-+func defaultValue(type: []char): []char
-    switch(type)
++enum Type
+    undetermined
+    bool_
+    int8
+    int16
+    int32
+    int64
+    uint8
+    uint16
+    uint32
+    uint64
+    float32
+    float64
+    struct {TODO: dounika, array?}
+end enum
++func strToType(str: []char): @Type
+    switch(str)
     case "bool"
-        ret "false"
+        ret %bool_
     case "int8"
-        ret "0y"
+        ret %int8
     case "int16"
-        ret "0s"
+        ret %int16
     case "int32"
-        ret "0m"
+        ret %int32
     case "int64"
-        ret "0"
+        ret %int64
     case "uint8"
-        ret "0uy"
+        ret %uint8
     case "uint16"
-        ret "0us"
+        ret %uint16
     case "uint32"
-        ret "0um"
+        ret %uint32
     case "uint64"
-        ret "0u"
+        ret %uint64
     case "float32"
-        ret "0.0f"
+        ret %float32
     case "float64"
-        ret "0.0"
+        ret %float64
     default
-        ret "null" {TODO: struct->null | array->?(maybe [] or null) | else->???}
+        ret %struct
     end switch
 end func
-
-func binOpToRetType(op: []char, lType: []char, rType: []char): []char
-    switch(op)
-    case "+", "-", "*", "/", "%" {'n->'n->'n}
-        if(lType <> rType)
-            do \util@crash("型不一致: (\{lType}) \{op} (\{rType})")
-        end if
-        switch(lType)
-        case "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"
-            ret lType
-        default
-            do \util@crash("演算子\{op}は\{lType}型には使えません")
-        end switch
-    case "=", "<>", "<", "<=", ">", ">=" {'n->'n->bool}
-        if(lType <> rType)
-            do \util@crash("型不一致: (\{lType}) \{op} (\{rType})")
-        end if
-        switch(lType)
-        case "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"
-            ret "bool"
-        default
-            do \util@crash("演算子\{op}は\{lType}型には使えません")
-        end switch
-    case "&", "|" {bool->bool->bool}
-        if(lType<>"bool" | rType<>"bool")
-            do \util@crash("演算子\{op}はbool以外の型には使えません")
-        end if
++func typeToStr(type: @Type): []char
+    switch(type)
+    case %bool_
         ret "bool"
+    case %int8
+        ret "int8"
+    case %int16
+        ret "int16"
+    case %int32
+        ret "int32"
+    case %int64
+        ret "int64"
+    case %uint8
+        ret "uint8"
+    case %uint16
+        ret "uint16"
+    case %uint32
+        ret "uint32"
+    case %uint64
+        ret "uint64"
+    case %float32
+        ret "float32"
+    case %float64
+        ret "float64"
+    case %struct
+        ret "struct"
+    case %undetermined
+        ret "(undetermined)"
     end switch
-    do \util@crash("謎の演算子\{op}の型を決定できませんでした")
-    ret ""
+end func
++func isPossibleLiteral(literal: []char, type: @Type): bool
+    if(literal="true" | literal="false")
+        ret type = %bool_
+    end if
+    var castable: bool
+    switch(type)
+    case %int8, %int16, %int32, %int64
+        do literal.toInt(&castable)
+        ret castable
+    case %uint8, %uint16, %uint32, %uint64 {現時点でint系と同じ}
+        do literal.toInt(&castable)
+        ret castable
+    case %float32, %float64
+        do literal.toFloat(&castable)
+        ret castable
+    end switch
+    ret false
+end func
++func defaultValue(type: @Type): []char
+    switch(type)
+    case %bool_
+        ret "false"
+    case %int8
+        ret "0"
+    case %int16
+        ret "0"
+    case %int32
+        ret "0"
+    case %int64
+        ret "0"
+    case %uint8
+        ret "0"
+    case %uint16
+        ret "0"
+    case %uint32
+        ret "0"
+    case %uint64
+        ret "0"
+    case %float32
+        ret "0.0"
+    case %float64
+        ret "0.0"
+    default
+        ret "" {TODO: struct->null | array->?(maybe [] or null) | else->???}
+    end switch
 end func
 
 +class Ast()
@@ -82,7 +141,7 @@ end class
 
 +class ExprNode()
     +var value: []char {operator=>symbol | var-ref|func-call=>name | else=>value}
-    +var type: []char
+    +var type: @Type
     +var lhs: ExprNode
     +var rhs: ExprNode
     +var args: list<ExprNode>
@@ -106,20 +165,21 @@ end class
     do node.value :: value
     do node.lhs :: lhs
     do node.rhs :: rhs
-    var lType: []char
-    var rType: []char
+    var l: @Type
+    var r: @Type
     if(!\util@isNull(node.lhs))
-        do lType :: node.lhs.type
+        do l :: node.lhs.type
     end if
     if(!\util@isNull(node.rhs))
-        do rType :: node.rhs.type
+        do r :: node.rhs.type
     end if
-    if(!\util@isNull(node.lhs) & !\util@isNull(node.rhs))
-        do node.type :: @binOpToRetType(node.value, lType, rType)
+    if(l<>%undetermined & r<>%undetermined & l<>r)
+        do @exprTypeMismatch(node)
     end if
+    do node.type :: lib@max(l$int, r$int) $ @Type
     ret node
-end func
-+func makeExprLeaf(value: []char): @ExprNode{TODO: 型どこで決める？}
+end func {TODO: 型決めパートいらない気がする}
++func makeExprLeaf(value: []char): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.value :: value
     ret node
