@@ -1,5 +1,5 @@
-all: build
-build: $(wildcard *.kn)
+build: w1
+w1: $(wildcard *.kn)
 	@~/Downloads/kuin_2021_08_17_src_ja/kuin -i main.kn -o w1.cpp -s ~/Downloads/kuin_2021_08_17_src_ja/sys/ -e cpp
 	@g++ w1.cpp -o w1
 	@rm w1.cpp
@@ -13,4 +13,4 @@ build: $(wildcard *.kn)
 clean:
 	@rm w1
 
-.PHONY: all build clean
+.PHONY: build clean

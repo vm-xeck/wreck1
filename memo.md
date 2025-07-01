@@ -1,12 +1,9 @@
 ## メモ
 
-```
-class Type()
-    +var primitive: @Type
-    ;TODO: NEed some ways to convert to LLVM type name
-    ; How the hell?
-    ; -> maybe it should be in LLVM section to adopt further LLVM updates
-    +var defaultValue: []char
-    
-end class
-```
+### 全体的な方向性
+* 型推論をやめる
+* コンパイラの表現力と拡張性のために、型(等)の記述にクラスを使う
+
+### そのために
+1. 型がもつ情報を関数ではなくメンバで表現する
+☆本当のリファクタリングはこれからだ!

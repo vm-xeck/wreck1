@@ -1,13 +1,14 @@
 func main(): int8 {
+    var test: int64 :: 1u + 2u
     var aiu: bool :: true
     var i: int8 :: 5y
-    while(i > 0) {
+    while(i > 0y) {
         const dif: int8 :: 2y
         do i <- i - dif
     }
     #ほとんど同じ型やないかーい#
     const ijaaaa: uint32 :: 8um
-    var a____: uint64 :: 1u*-2u
+    var a____: uint64 :: 1u *- 2u
     var hogehogehoge: float32 :: 32323.f
     if(i < 23y) {
         do i <- 0y
@@ -31,4 +32,4 @@ func main(): int8 {
     return global + global
 }
 
-var global: int8 :: 32y
+var global: int8 :: 4y

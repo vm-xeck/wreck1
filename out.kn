@@ -89,7 +89,7 @@ end func
 func varToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]char): []char
     var llvm: []char :: ""
     if(parent.isRoot)
-        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}\n"
+        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         if(!\util@isNull(node.expr))
             do \type@type(node.expr, node.type, parent)
             do init :~ @exprToLlvm(node.expr, parent)
@@ -112,7 +112,7 @@ end func
 func constToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]char): []char
     var llvm: []char :: ""
     if(parent.isRoot)
-        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@defaultValue(node.type)}\n"
+        do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         if(!\util@isNull(node.expr))
             do \type@type(node.expr, node.type, parent)
             do init :~ @exprToLlvm(node.expr, parent)
@@ -235,10 +235,10 @@ func exprToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
         switch(node.type) {literal}
         case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
             do parent.count :+ 1
-            ret "%\{parent.count} = add \{@wt2lt(node.type)} \{node.value}, \{\wreck1@defaultValue(node.type)}\n"
+            ret "%\{parent.count} = add \{@wt2lt(node.type)} \{\wreck1@dropSfx(node.value)}, \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         case %float32, %float64
             do parent.count :+ 1
-            ret "%\{parent.count} = fadd \{@wt2lt(node.type)} \{node.value}, \{\wreck1@defaultValue(node.type)}\n"
+            ret "%\{parent.count} = fadd \{@wt2lt(node.type)} \{\wreck1@dropSfx(node.value)}, \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         case %undetermined
             do \util@crash("Couldn't LLVMize: the type of the value \{node.value} is undetermined")
             ret ""

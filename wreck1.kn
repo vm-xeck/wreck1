@@ -72,20 +72,53 @@ end func
     end switch
 end func
 +func isPossibleLiteral(literal: []char, type: @Type): bool
+{sfxと型の対応を確認するだけ。実質的な型推論の終焉}
+{「可能なリテラルか」ではなく型の判別のみしており、本当はおかしい}
     if(literal="true" | literal="false")
         ret type = %bool_
     end if
-    var castable: bool
-    switch(type)
-    case %int8, %int16, %int32, %int64
-        do literal.toInt(&castable)
-        ret castable
-    case %uint8, %uint16, %uint32, %uint64 {現時点でint系と同じ}
-        do literal.toInt(&castable)
-        ret castable
-    case %float32, %float64
-        do literal.toFloat(&castable)
-        ret castable
+    if(type = %int64)
+        for i(0, ^literal-1)
+            if(!\util@isNum(literal[i]))
+                ret false
+            end if
+        end for
+        ret true
+    end if
+    if(type = %float64)
+        var dotCount: int :: 0
+        for i(0, ^literal-1)
+            if(\util@isNum(literal[i]))
+            elif(literal[i] = '.')
+                do dotCount :+ 1
+            else
+                ret false
+            end if
+        end for
+        ret dotCount = 1
+    end if
+    if(^literal <= 1)
+        ret false
+    end if
+    switch(literal.sub(^literal-2, -1))
+    case "uy"
+        ret type = %uint8
+    case "us"
+        ret type = %uint16
+    case "um"
+        ret type = %uint32
+    end switch
+    switch(literal.sub(^literal-1, -1))
+    case "u"
+        ret type = %uint64
+    case "y"
+        ret type = %int8
+    case "s"
+        ret type = %int16
+    case "m"
+        ret type = %int32
+    case "f"
+        ret type = %float32
     end switch
     ret false
 end func
@@ -94,27 +127,36 @@ end func
     case %bool_
         ret "false"
     case %int8
-        ret "0"
+        ret "0y"
     case %int16
-        ret "0"
+        ret "0s"
     case %int32
-        ret "0"
+        ret "0m"
     case %int64
         ret "0"
     case %uint8
-        ret "0"
+        ret "0uy"
     case %uint16
-        ret "0"
+        ret "0us"
     case %uint32
-        ret "0"
+        ret "0um"
     case %uint64
-        ret "0"
+        ret "0u"
     case %float32
-        ret "0.0"
+        ret "0.0f"
     case %float64
         ret "0.0"
     default
         ret "" {TODO: struct->null | array->?(maybe [] or null) | else->???}
+    end switch
+end func
+
++func dropSfx(literal: []char): []char
+    switch(literal[^literal-1])
+    case 'u', 'y', 's', 'm', 'f'
+        ret dropSfx(literal.sub(0, ^literal-1))
+    default
+        ret literal
     end switch
 end func
 
@@ -178,7 +220,7 @@ end class
     end if
     do node.type :: lib@max(l$int, r$int) $ @Type
     ret node
-end func {TODO: 型決めパートいらない気がする}
+end func {TODO: 型決めパートいらない}
 +func makeExprLeaf(value: []char): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.value :: value

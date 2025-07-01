@@ -112,6 +112,8 @@ end enum
         end switch
     end for
 
-    do tokens.add(buf)
+    if(tokenKind <> %init)
+        do tokens.add(buf)
+    end if
     ret tokens
 end func

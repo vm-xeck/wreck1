@@ -76,9 +76,7 @@ func parseVar(tokens: list<[]char>): \wreck1@StmtNode
     do tokens.next()
     do node.type :: \wreck1@strToType(tokens.get())
     do tokens.next()
-    if(tokens.get() = ":")
-        do tokens.next()
-        do \util@expect(tokens.get(), ":")
+    if(!tokens.term() & tokens.get() = "::")
         do tokens.next()
         do node.expr :: @parseExpr(tokens)
     end if
@@ -257,7 +255,10 @@ func parseUnary(tokens: list<[]char>): \wreck1@ExprNode
     switch(tokens.get())
     case "-"
         do tokens.next()
-        ret \wreck1@makeExprNode("-", \wreck1@makeExprLeaf("0"), @parsePrimary(tokens))
+        var primaryNode: \wreck1@ExprNode :: @parsePrimary(tokens)
+        do \type@type(primaryNode, %undetermined, null) {やばい!!!}
+        var zeroNode: \wreck1@ExprNode :: \wreck1@makeExprLeaf(\wreck1@defaultValue(primaryNode.type))
+        ret \wreck1@makeExprNode("-", zeroNode, primaryNode)
     case "!"
         do tokens.next()
         ret \wreck1@makeExprNode("=", \wreck1@makeExprLeaf("false"), @parsePrimary(tokens))

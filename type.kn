@@ -69,10 +69,36 @@ func decideType(node: \wreck1@ExprNode, metadata: \wreck1@Namespace): @TypeInfo
             ret %decided
         end if
         {↓numではじまる系}
-        if(\wreck1@isPossibleLiteral(node.value, %int64)) {選択肢を絞れるだけ}
-            ret %intic
+        if(\wreck1@isPossibleLiteral(node.value, %int8))
+            do node.type :: %int8
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %int16))
+            do node.type :: %int16
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %int32))
+            do node.type :: %int32
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %int64))
+            do node.type :: %int64
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %uint8))
+            do node.type :: %uint8
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %uint16))
+            do node.type :: %uint16
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %uint32))
+            do node.type :: %uint32
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %uint64))
+            do node.type :: %uint64
+            ret %decided
+        elif(\wreck1@isPossibleLiteral(node.value, %float32))
+            do node.type :: %float32
+            ret %decided
         elif(\wreck1@isPossibleLiteral(node.value, %float64))
-            ret %floatic
+            do node.type :: %float64
+            ret %decided
         end if
         {????????}
         do \util@crash("Failed o type unknown expr: \{node.value}")
