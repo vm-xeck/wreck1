@@ -1,0 +1,123 @@
++class Type()
+    +var name: []char
+    +var defaultValue: []char
+    +var sfx: []char
+    +var aryElemType: Type
+    +var strctElemTypes: []@Type
+
+    +*func cmp(t: kuin@Class): int
+        var type2: Type :: t $ Type
+        if(me.name = type2.name)
+            ret 0
+        elif(me.name < type2.name)
+            ret -1
+        else
+            ret 1
+        end if
+    end func
+end class
+
+
++func bool_(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "bool"
+    do type.defaultValue :: "false"
+    do type.sfx :: ""
+    ret type
+end func
+
++func int8(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "int8"
+    do type.defaultValue :: "0y"
+    do type.sfx :: "y"
+    ret type
+end func
+
++func int16(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "int16"
+    do type.defaultValue :: "0s"
+    do type.sfx :: "s"
+    ret type
+end func
+
++func int32(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "int32"
+    do type.defaultValue :: "0m"
+    do type.sfx :: "m"
+    ret type
+end func
+
++func int64(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "int64"
+    do type.defaultValue :: "0"
+    do type.sfx :: ""
+    ret type
+end func
+
++func uint8(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "uint8"
+    do type.defaultValue :: "0uy"
+    do type.sfx :: "uy"
+    ret type
+end func
+
++func uint16(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "uint16"
+    do type.defaultValue :: "0us"
+    do type.sfx :: "us"
+    ret type
+end func
+
++func uint32(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "uint32"
+    do type.defaultValue :: "0um"
+    do type.sfx :: "um"
+    ret type
+end func
+
++func uint64(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "uint64"
+    do type.defaultValue :: "0u"
+    do type.sfx :: "u"
+    ret type
+end func
+
++func float32(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "float32"
+    do type.defaultValue :: "0.f"
+    do type.sfx :: "f"
+    ret type
+end func
+
++func float64(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "float64"
+    do type.defaultValue :: "0."
+    do type.sfx :: ""
+    ret type
+end func
+
++func array(elemType: @Type): @Type
+    var type: @Type :: #@Type
+    do type.name :: "[]\{elemType.name}"
+    do type.defaultValue :: "[]"
+    do type.aryElemType :: elemType
+    ret type
+end func
+
++func struct(name: []char, elemTypes: []@Type): @Type
+    var type: @Type :: #@Type
+    do type.name :: name
+    do type.defaultValue :: "{}"
+    do type.strctElemTypes :: elemTypes
+    ret type
+end func

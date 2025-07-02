@@ -29,7 +29,7 @@ func main(): int8 {
     do aiu <- false
     const nothing: int64 :: 0
     do 3us + 2us
-    return global + global
+    return global * i + 2y
 }
 
 var global: int8 :: 4y
