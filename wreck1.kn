@@ -1,4 +1,7 @@
-+enum Type
+include type
+include op
+
++enum Type_
     undetermined
     bool_
     int8
@@ -13,7 +16,7 @@
     float64
     struct {TODO: dounika, array?}
 end enum
-+func strToType(str: []char): @Type
++func strToType(str: []char): @Type_
     switch(str)
     case "bool"
         ret %bool_
@@ -41,7 +44,7 @@ end enum
         ret %struct
     end switch
 end func
-+func typeToStr(type: @Type): []char
++func typeToStr(type: @Type_): []char
     switch(type)
     case %bool_
         ret "bool"
@@ -71,7 +74,7 @@ end func
         ret "(undetermined)"
     end switch
 end func
-+func isPossibleLiteral(literal: []char, type: @Type): bool
++func isPossibleLiteral(literal: []char, type: @Type_): bool
 {sfxと型の対応を確認するだけ。実質的な型推論の終焉}
 {「可能なリテラルか」ではなく型の判別のみしており、本当はおかしい}
     if(literal="true" | literal="false")
@@ -122,7 +125,7 @@ end func
     end switch
     ret false
 end func
-+func defaultValue(type: @Type): []char
++func defaultValue(type: @Type_): []char
     switch(type)
     case %bool_
         ret "false"
@@ -171,7 +174,7 @@ end class
     +var kind: []char
     +var name: []char
     +var args: list<StmtNode>
-    +var type: @Type
+    +var type: @Type_
     +var expr: @ExprNode
     +var stmts: list<StmtNode>
     +var branch: StmtNode
@@ -183,7 +186,7 @@ end class
 
 +class ExprNode()
     +var value: []char {operator=>symbol | var-ref|func-call=>name | else=>value}
-    +var type: @Type
+    +var type: @Type_
     +var lhs: ExprNode
     +var rhs: ExprNode
     +var args: list<ExprNode>
@@ -207,8 +210,8 @@ end class
     do node.value :: value
     do node.lhs :: lhs
     do node.rhs :: rhs
-    var l: @Type
-    var r: @Type
+    var l: @Type_
+    var r: @Type_
     if(!\util@isNull(node.lhs))
         do l :: node.lhs.type
     end if
@@ -218,7 +221,7 @@ end class
     if(l<>%undetermined & r<>%undetermined & l<>r)
         do @exprTypeMismatch(node)
     end if
-    do node.type :: lib@max(l$int, r$int) $ @Type
+    do node.type :: lib@max(l$int, r$int) $ @Type_
     ret node
 end func {TODO: 型決めパートいらない}
 +func makeExprLeaf(value: []char): @ExprNode
@@ -233,8 +236,8 @@ end func
 
 +class Namespace()
     +var name: []char
-    +var type: @Type
-    +var argTypes: []@Type
+    +var type: @Type_
+    +var argTypes: []@Type_
     +var names: list<Namespace>
     +var count: int
     +var isMutable: bool
@@ -242,7 +245,7 @@ end func
     +var parent: Namespace
     *func ctor()
         do me.name :: ""
-        do me.argTypes :: #[0]@Type
+        do me.argTypes :: #[0]@Type_
         do me.names :: #list<Namespace>
     end func
     +func get(name: []char, existed: &bool): Namespace
@@ -268,7 +271,7 @@ end func
         do me.get(name, &existed)
         ret existed
     end func
-    +func typeOf(name: []char): @Type
+    +func typeOf(name: []char): @Type_
         ret me.get(name, &).type
     end func
 end class

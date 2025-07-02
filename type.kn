@@ -12,7 +12,7 @@ func cmp(infos: []@TypeInfo): int
     end if
     ret infos[0]$int * 10^(^infos-1) + cmp(infos.sub(1, -1))
 end func
-func isCompatibleInfo(info: @TypeInfo, type: \wreck1@Type): bool
+func isCompatibleInfo(info: @TypeInfo, type: \wreck1@Type_): bool
     switch(type)
     case %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
         ret info = %intic
@@ -25,7 +25,7 @@ func isCompatibleInfo(info: @TypeInfo, type: \wreck1@Type): bool
     ret false
 end func
 
-+func type(node: \wreck1@ExprNode, stmtType: \wreck1@Type, metadata: \wreck1@Namespace)
++func type(node: \wreck1@ExprNode, stmtType: \wreck1@Type_, metadata: \wreck1@Namespace)
     switch info(@decideType(node, metadata))
     case %decided {OK}
     case %intic, %floatic, %undecided
@@ -147,7 +147,7 @@ func decideType(node: \wreck1@ExprNode, metadata: \wreck1@Namespace): @TypeInfo
     ret %undecided {上でぜんぶ網羅したはずだけど、warningを消すために}
 end func
 
-func spread(type: \wreck1@Type, node: \wreck1@ExprNode)
+func spread(type: \wreck1@Type_, node: \wreck1@ExprNode)
     do node.type :: type
     if(!\util@isNull(node.lhs))
         do spread(type, node.lhs)
@@ -157,7 +157,7 @@ func spread(type: \wreck1@Type, node: \wreck1@ExprNode)
     end if
 end func
 
-func opToReturnType(op: []char, argType: \wreck1@Type): \wreck1@Type
+func opToReturnType(op: []char, argType: \wreck1@Type_): \wreck1@Type_
     switch(op)
     case "=", "<>", "<", "<=", ">", ">="
         ret %bool_

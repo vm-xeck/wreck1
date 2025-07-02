@@ -173,11 +173,11 @@ func parseAssignment(tokens: list<[]char>): \wreck1@ExprNode
     if(tokens.term())
         ret node
     end if
-    if(tokens.get()<>"<-" | !\util@isAlpha(node.value[0]) | node.depth()<>1)
+    if(tokens.get()<>\wreck1@assignSymbol | !\util@isAlpha(node.value[0]) | node.depth()<>1)
         ret node
     end if
     do tokens.next()
-    do node :: \wreck1@makeExprNode("<-", node, @parseAssignment(tokens))
+    do node :: \wreck1@makeExprNode(\wreck1@assignSymbol, node, @parseAssignment(tokens))
     ret node
 end func
 
@@ -185,7 +185,7 @@ func parseOr(tokens: list<[]char>): \wreck1@ExprNode
     var node: \wreck1@ExprNode :: @parseAnd(tokens)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case "|"
+        case \wreck1@orSymbol
             do tokens.next()
             do node :: \wreck1@makeExprNode(symbol, node, @parseAnd(tokens))
         default
@@ -199,7 +199,7 @@ func parseAnd(tokens: list<[]char>): \wreck1@ExprNode
     var node: \wreck1@ExprNode :: @parseRelational(tokens)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case "&"
+        case \wreck1@andSymbol
             do tokens.next()
             do node :: \wreck1@makeExprNode(symbol, node, @parseRelational(tokens))
         default
@@ -213,7 +213,7 @@ func parseRelational(tokens: list<[]char>): \wreck1@ExprNode
     var node: \wreck1@ExprNode :: @parseAdd(tokens)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case "=", "<>", "<", "<=", ">", ">="
+        case \wreck1@eqSymbol, \wreck1@neqSymbol, \wreck1@ltSymbol, \wreck1@leqSymbol, \wreck1@gtSymbol, \wreck1@geqSymbol
             do tokens.next()
             do node :: \wreck1@makeExprNode(symbol, node, @parseAdd(tokens))
         default
@@ -227,7 +227,7 @@ func parseAdd(tokens: list<[]char>): \wreck1@ExprNode
     var node: \wreck1@ExprNode :: @parseMul(tokens)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case "+", "-"
+        case \wreck1@addSymbol, \wreck1@subSymbol
             do tokens.next()
             do node :: \wreck1@makeExprNode(symbol, node, @parseMul(tokens))
         default
@@ -241,7 +241,7 @@ func parseMul(tokens: list<[]char>): \wreck1@ExprNode
     var node: \wreck1@ExprNode :: @parseUnary(tokens)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case "*", "/"
+        case \wreck1@mulSymbol, \wreck1@divSymbol
             do tokens.next()
             do node :: \wreck1@makeExprNode(symbol, node, @parseUnary(tokens))
         default
@@ -253,13 +253,13 @@ end func
 
 func parseUnary(tokens: list<[]char>): \wreck1@ExprNode
     switch(tokens.get())
-    case "-"
+    case \wreck1@negSymbol
         do tokens.next()
         var primaryNode: \wreck1@ExprNode :: @parsePrimary(tokens)
         do \type@type(primaryNode, %undetermined, null) {やばい!!!}
         var zeroNode: \wreck1@ExprNode :: \wreck1@makeExprLeaf(\wreck1@defaultValue(primaryNode.type))
         ret \wreck1@makeExprNode("-", zeroNode, primaryNode)
-    case "!"
+    case \wreck1@notSymbol
         do tokens.next()
         ret \wreck1@makeExprNode("=", \wreck1@makeExprLeaf("false"), @parsePrimary(tokens))
     default

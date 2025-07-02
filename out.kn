@@ -19,7 +19,7 @@
     do cui@print(init)
 end func
 
-func wt2lt(type: \wreck1@Type): []char
+func wt2lt(type: \wreck1@Type_): []char
     switch(type)
     case %bool_
         ret "i1"

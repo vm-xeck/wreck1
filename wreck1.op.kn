@@ -5,13 +5,31 @@
 end class
 
 
++const assignSymbol: []char :: "<-"
++const orSymbol: []char :: "|"
++const andSymbol: []char :: "&"
++const eqSymbol: []char :: "="
++const neqSymbol: []char :: "<>"
++const ltSymbol: []char :: "<"
++const leqSymbol: []char :: "<="
++const gtSymbol: []char :: ">"
++const geqSymbol: []char :: ">="
++const addSymbol: []char :: "+"
++const subSymbol: []char :: "-"
++const mulSymbol: []char :: "*"
++const divSymbol: []char :: "/"
++const remSymbol: []char :: "%"
++const negSymbol: []char :: "-"
++const notSymbol: []char :: "!"
+
+
 +func assign(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
         do @opTypeError("assign", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "<-"
+    do op.symbol :: @assignSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -19,11 +37,11 @@ end func
 
 +func or(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>@bool_() | argTypes[1]<>@bool_())
-        do opTypeError("or", argTypes)
+        do @opTypeError("or", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "|"
+    do op.symbol :: @orSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -31,11 +49,11 @@ end func
 
 +func and(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>@bool_() | argTypes[1]<>@bool_())
-        do opTypeError("and", argTypes)
+        do @opTypeError("and", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "&"
+    do op.symbol :: @andSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -43,11 +61,11 @@ end func
 
 +func eq(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("eq", argTypes)
+        do @opTypeError("eq", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "="
+    do op.symbol :: @eqSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -55,11 +73,11 @@ end func
 
 +func neq(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("neq", argTypes)
+        do @opTypeError("neq", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "<>"
+    do op.symbol :: @neqSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -67,16 +85,16 @@ end func
 
 +func lt(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("lt", argTypes)
+        do @opTypeError("lt", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("lt", argTypes)
+        do @opTypeError("lt", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "<"
+    do op.symbol :: @ltSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -84,16 +102,16 @@ end func
 
 +func leq(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("leq", argTypes)
+        do @opTypeError("leq", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("leq", argTypes)
+        do @opTypeError("leq", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "<="
+    do op.symbol :: @leqSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -101,16 +119,16 @@ end func
 
 +func gt(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("gt", argTypes)
+        do @opTypeError("gt", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("gt", argTypes)
+        do @opTypeError("gt", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: ">"
+    do op.symbol :: @gtSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -118,16 +136,16 @@ end func
 
 +func geq(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("geq", argTypes)
+        do @opTypeError("geq", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("geq", argTypes)
+        do @opTypeError("geq", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: ">="
+    do op.symbol :: @geqSymbol
     do op.retType :: @bool_()
     do op.arity :: 2
     ret op
@@ -135,16 +153,16 @@ end func
 
 +func add(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("add", argTypes)
+        do @opTypeError("add", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("add", argTypes)
+        do @opTypeError("add", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "+"
+    do op.symbol :: @addSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -152,16 +170,16 @@ end func
 
 +func sub(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("sub", argTypes)
+        do @opTypeError("sub", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("sub", argTypes)
+        do @opTypeError("sub", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "-"
+    do op.symbol :: @subSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -169,16 +187,16 @@ end func
 
 +func mul(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("mul", argTypes)
+        do @opTypeError("mul", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("mul", argTypes)
+        do @opTypeError("mul", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "*"
+    do op.symbol :: @mulSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -186,16 +204,16 @@ end func
 
 +func div(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("div", argTypes)
+        do @opTypeError("div", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64(), @float32(), @float64() {OK}
     default
-        do opTypeError("div", argTypes)
+        do @opTypeError("div", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "/"
+    do op.symbol :: @divSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -203,16 +221,16 @@ end func
 
 +func rem(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do opTypeError("rem", argTypes)
+        do @opTypeError("rem", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @uint8(), @uint16(), @uint32(), @uint64() {OK}
     default
-        do opTypeError("rem", argTypes)
+        do @opTypeError("rem", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "%"
+    do op.symbol :: @remSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op
@@ -220,16 +238,16 @@ end func
 
 +func neg(argTypes: []@Type): @Op
     if(^argTypes <> 1)
-        do opTypeError("neg", argTypes)
+        do @opTypeError("neg", argTypes)
     end if
     switch(argTypes[0])
     case @int8(), @int16(), @int32(), @int64(), @float32(), @float64() {OK}
     default
-        do opTypeError("neg", argTypes)
+        do @opTypeError("neg", argTypes)
     end switch
 
     var op: @Op :: #@Op
-    do op.symbol :: "-"
+    do op.symbol :: @negSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 1
     ret op
@@ -237,11 +255,11 @@ end func
 
 +func not(argTypes: []@Type): @Op
     if(^argTypes<>1 | argTypes[0]<>@bool_())
-        do opTypeError("not", argTypes)
+        do @opTypeError("not", argTypes)
     end if
 
     var op: @Op :: #@Op
-    do op.symbol :: "!"
+    do op.symbol :: @notSymbol
     do op.retType :: @bool_()
     do op.arity :: 1
     ret op
