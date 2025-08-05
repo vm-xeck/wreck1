@@ -6,7 +6,7 @@ build: $(wildcard *.kn)
 	
 %.w1: w1
 	@./w1 $@ > $(basename $@).ll
-	@llc $(basename $@).ll
+	@llc -opaque-pointers $(basename $@).ll
 	@clang $(basename $@).s -o $(basename $@)
 	@rm $(basename $@).ll
 	@rm $(basename $@).s
