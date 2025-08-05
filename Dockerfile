@@ -20,6 +20,9 @@ RUN ln -s /usr/local/lib/kuin/kuin /usr/local/bin/kuin && \
 	update-alternatives --install /usr/bin/llc llc /usr/bin/llc-14 100
 ENV KUIN_SYS_PATH=/usr/local/lib/kuin/sys/
 
+# VSCode からアタッチするときはこの行のコメントアウトを外す
+# CMD ["tail", "-f", "/dev/null"]
+
 # ビルドと実行
 # この Dockerfile と同じディレクトリにいる状態で
 # $ docker build -t wreck1-dev .
