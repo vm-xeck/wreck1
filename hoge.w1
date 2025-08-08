@@ -1,4 +1,7 @@
+var global: int8 :: 4y
+
 func main(): int8 {
+
     var test: int64 :: 1u + 2u
     var aiu: bool :: true
     var i: int8 :: 5y
@@ -6,9 +9,9 @@ func main(): int8 {
         const dif: int8 :: 2y
         do i <- i - dif
     }
-    #ほとんど同じ型やないかーい#
+    #これはコメントです#
     const ijaaaa: uint32 :: 8um
-    var a____: uint64 :: 1u *- 2u
+    var a____: int32 :: 1m *- 2m
     var hogehogehoge: float32 :: 32323.f
     if(i < 23y) {
         do i <- 0y
@@ -16,7 +19,7 @@ func main(): int8 {
         do i <- i - 10y
     } else {
         if(!aiu) {
-            var uwa__: bool :: !aiu + aiu
+            var uwa__: bool :: !aiu | aiu
             do aiu <- true
             if(i > 10y) {
                 do global <- global + 3y
@@ -26,10 +29,12 @@ func main(): int8 {
         }
         do i <- i - 100y
     }
+    func inner(a: int8, i: int8, u: int8): int8 {
+        return a + i - u
+    }
+    var hoge: int8 :: inner(2, 3, 4)
     do aiu <- false
     const nothing: int64 :: 0
     do 3us + 2us
     return global * i + 2y + 40y
 }
-
-var global: int8 :: 4y

@@ -5,7 +5,8 @@ func main()
     var code: []char :: reader.readStr()
 
     var tokens: list<[]char> :: \lex@tokenize(code)
-    var ast: \wreck1@Ast :: \stx@parse(tokens)
-    var metadata: \wreck1@Namespace :: \type@makeMetadata(ast)
-    do \out@printLlvm(ast, metadata)
+    var ast: \wreck1@StmtNode :: \stx@parse(tokens)
+    do namespace.names :: \type@stmtsToMetadatas(ast.stmts, namespace)
+    do \type@shapeOfNamespace(namespace, "")
+    do \out@printLlvm(ast, namespace)
 end func

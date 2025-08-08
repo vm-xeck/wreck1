@@ -42,6 +42,10 @@ func wt2lt(type: \wreck1@Type_): []char
 end func
 
 func stmtToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    {debugv}
+    do cui@print("stmtToLlvm: \{node.kind}\n")
+    do cui@flush()
+    {debug^}
     switch(node.kind)
     case "func"
         ret @funcToLlvm(node, parent)
@@ -91,14 +95,14 @@ func varToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]char)
     if(parent.isRoot)
         do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         if(!\util@isNull(node.expr))
-            do \type@type(node.expr, node.type, parent)
+            ; do \type@type(node.expr, node.type, parent)
             do init :~ @exprToLlvm(node.expr, parent)
             do init :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr @\{node.name}\n"
         end if
     else
         do llvm :~ "%\{node.name} = alloca \{@wt2lt(node.type)}\n"
         if(!\util@isNull(node.expr))
-            do \type@type(node.expr, node.type, parent)
+            ; do \type@type(node.expr, node.type, parent)
             do llvm :~ @exprToLlvm(node.expr, parent)
             do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr %\{node.name}\n"
         else
@@ -114,14 +118,14 @@ func constToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace, init: &[]cha
     if(parent.isRoot)
         do llvm :~ "@\{node.name} = global \{@wt2lt(node.type)} \{\wreck1@dropSfx(\wreck1@defaultValue(node.type))}\n"
         if(!\util@isNull(node.expr))
-            do \type@type(node.expr, node.type, parent)
+            ; do \type@type(node.expr, node.type, parent)
             do init :~ @exprToLlvm(node.expr, parent)
             do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr @\{node.name}\n"
         end if
     else
         do llvm :~ "%\{node.name} = alloca \{@wt2lt(node.type)}\n"
         if(!\util@isNull(node.expr))
-            do \type@type(node.expr, node.type, parent)
+            ; do \type@type(node.expr, node.type, parent)
             do llvm :~ @exprToLlvm(node.expr, parent)
             do llvm :~ "store \{@wt2lt(node.type)} %\{parent.count}, ptr %\{node.name}\n"
         else
@@ -174,7 +178,7 @@ func ifToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
 
         if(node.kind="if" | node.kind="elif")
             do llvm :~ "\{label}.cond:\n"
-            do \type@type(node.expr, node.type, myMetadata)
+            ; do \type@type(node.expr, node.type, myMetadata)
             do llvm :~ @exprToLlvm(node.expr, myMetadata)
             var nextLabel: []char :: ""
             if(\util@isNull(node.branch))
@@ -207,14 +211,14 @@ func ifToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
 end func
 
 func returnToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
-    do \type@type(node.expr, parent.type, parent)
+    ; do \type@type(node.expr, parent.type, parent)
     var llvm: []char :: @exprToLlvm(node.expr, parent)
     do llvm :~ "ret \{@wt2lt(parent.type)} %\{parent.count}\n"
     ret llvm
 end func
 
 func doToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
-    do \type@type(node.expr, %undetermined, parent)
+    ; do \type@type(node.expr, %undetermined, parent)
     ret @exprToLlvm(node.expr, parent)
 end func
 

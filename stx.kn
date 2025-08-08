@@ -1,304 +1,448 @@
-+func parse(tokens: list<[]char>): \wreck1@Ast
-    var ast: \wreck1@Ast :: #\wreck1@Ast
+include token
+
+
++func parse(tokens: list<[]char>): \wreck1@StmtNode
+    var root: \wreck1@StmtNode :: \wreck1@makeRootNode()
     do tokens.head()
     while(!tokens.term())
-        do ast.stmts.add(@parseStmt(tokens)) {TODO: structもここでパースしたさがある}
+        do @addStmt(tokens, root) {TODO: structもここでパースしたさがある<-これはなに}
     end while
-    ret ast
+    ret root
 end func
 
 
-func parseStmt(tokens: list<[]char>): \wreck1@StmtNode
+func addStmt(tokens: list<[]char>, parent: \wreck1@StmtNode)
     switch(tokens.get())
     case "func"
-        ret @parseFunc(tokens)
+        do parent.stmts.add(@parseFunc(tokens, parent))
     case "var"
-        ret @parseVar(tokens)
+        do parent.stmts.add(@parseVar(tokens, parent))
     case "const"
-        ret @parseConst(tokens)
+        do parent.stmts.add(@parseConst(tokens, parent))
     case "while"
-        ret @parseWhile(tokens)
+        do parent.stmts.add(@parseWhile(tokens, parent))
     case "if"
-        ret @parseIf(tokens)
+        do parent.stmts.add(@parseIf(tokens, parent))
+        while(!tokens.term() & tokens.get()="elif")
+            do parent.stmts.add(@parseElif(tokens, parent))
+        end while
+        if(!tokens.term() & tokens.get()="else")
+            do parent.stmts.add(@parseElse(tokens, parent))
+        end if
     case "return"
-        ret @parseReturn(tokens)
+        do parent.stmts.add(@parseReturn(tokens, parent))
     case "do"
-        ret @parseDo(tokens)
+        do parent.stmts.add(@parseDo(tokens, parent))
     default
         do \util@crash("Couldn't parse unknown stmt: \{tokens.get()}")
-        ret #\wreck1@StmtNode
     end switch
 end func
 
-func parseFunc(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.kind :: tokens.get()
+func parseFunc(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var name: []char
+    var type: \wreck1@Type
+    var args: []\wreck1@FuncArg :: #[0]\wreck1@FuncArg
+    var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+    
+    do \util@expect(tokens.get(), "func")
     do tokens.next()
-    do node.name :: tokens.get()
+    do name :: tokens.get()
     do tokens.next()
     do \util@expect(tokens.get(), "(")
     do tokens.next()
     while(tokens.get() <> ")")
-        var arg: \wreck1@StmtNode :: #\wreck1@StmtNode
-        do arg.name :: tokens.get()
+        var argName: []char :: tokens.get()
         do tokens.next()
         do \util@expect(tokens.get(), ":")
         do tokens.next()
-        do arg.type :: \wreck1@strToType(tokens.get())
-        do node.args.add(arg)
+        var argType: \wreck1@Type :: @typeNameToType(tokens.get())
+        do args :~ [\wreck1@makeFuncArg(argName, argType)]
         do tokens.next()
         if(tokens.get() = ",")
             do tokens.next()
+        else
+            do \util@expect(tokens.get(), ")")
         end if
     end while
     do \util@expect(tokens.get(), ")")
     do tokens.next()
     do \util@expect(tokens.get(), ":")
     do tokens.next()
-    do node.type :: \wreck1@strToType(tokens.get())
+    do type :: @typeNameToType(tokens.get())
     do tokens.next()
     do \util@expect(tokens.get(), "{")
     do tokens.next()
-    while(tokens.get() <> "}")
-        do node.stmts.add(@parseStmt(tokens))
+
+    var node: \wreck1@StmtNode :: \wreck1@makeFuncNode(name, type, args, stmts, parent)
+    while(!tokens.term() & tokens.get()<>"}")
+        do @addStmt(tokens, node)
     end while
+    do \util@expect(tokens.get(), "}")
     do tokens.next()
     ret node
 end func
 
-func parseVar(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.kind :: tokens.get()
+func parseVar(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var name: []char
+    var type: \wreck1@Type
+    var expr: \wreck1@ExprNode
+
+    do \util@expect(tokens.get(), "var")
     do tokens.next()
-    do node.name :: tokens.get()
+    do name :: tokens.get()
     do tokens.next()
     do \util@expect(tokens.get(), ":")
     do tokens.next()
-    do node.type :: \wreck1@strToType(tokens.get())
+    do type :: @typeNameToType(tokens.get())
     do tokens.next()
-    if(!tokens.term() & tokens.get() = "::")
+    if(!tokens.term() & tokens.get()="::")
         do tokens.next()
-        do node.expr :: @parseExpr(tokens)
+        do expr :: @parseExpr(tokens, parent)
     end if
-    ret node
+    ret \wreck1@makeVarNode(name, type, expr, parent)
 end func
 
-func parseConst(tokens: list<[]char>): \wreck1@StmtNode
-    ret @parseVar(tokens) {TODO: oi}
+func parseConst(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var name: []char
+    var type: \wreck1@Type
+    var expr: \wreck1@ExprNode
+
+    do \util@expect(tokens.get(), "const")
+    do tokens.next()
+    do name :: tokens.get()
+    do tokens.next()
+    do \util@expect(tokens.get(), ":")
+    do tokens.next()
+    do type :: @typeNameToType(tokens.get())
+    do tokens.next()
+    if(!tokens.term() & tokens.get()="::")
+        do tokens.next()
+        do expr :: @parseExpr(tokens, parent)
+    end if
+    ret \wreck1@makeConstNode(name, type, expr, parent)
 end func
 
-func parseWhile(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.name :: "_w\{tokens.idx()}"
-    do node.kind :: tokens.get()
+func parseWhile(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var expr: \wreck1@ExprNode
+    var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+
+    do \util@expect(tokens.get(), "while")
     do tokens.next()
     do \util@expect(tokens.get(), "(")
     do tokens.next()
-    do node.expr :: @parseExpr(tokens)
+    do expr :: @parseExpr(tokens, parent)
     do \util@expect(tokens.get(), ")")
     do tokens.next()
     do \util@expect(tokens.get(), "{")
     do tokens.next()
-    while(tokens.get() <> "}")
-        do node.stmts.add(@parseStmt(tokens))
+
+    var node: \wreck1@StmtNode :: \wreck1@makeWhileNode(expr, stmts, parent)
+    while(!tokens.term() & tokens.get()<>"}")
+        do @addStmt(tokens, node)
     end while
+    do \util@expect(tokens.get(), "}")
     do tokens.next()
     ret node
 end func
 
-func parseIf(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.name :: "_i\{tokens.idx()}"
-    do node.kind :: tokens.get()
+func parseIf(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var expr: \wreck1@ExprNode
+    var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+
+    do \util@expect(tokens.get(), "if")
     do tokens.next()
     do \util@expect(tokens.get(), "(")
     do tokens.next()
-    do node.expr :: @parseExpr(tokens)
+    do expr :: @parseExpr(tokens, parent)
     do \util@expect(tokens.get(), ")")
     do tokens.next()
     do \util@expect(tokens.get(), "{")
     do tokens.next()
-    while(tokens.get() <> "}")
-        do node.stmts.add(@parseStmt(tokens))
+
+    var node: \wreck1@StmtNode :: \wreck1@makeIfNode(expr, stmts, parent)
+    while(!tokens.term() & tokens.get()<>"}")
+        do @addStmt(tokens, node)
     end while
+    do \util@expect(tokens.get(), "}")
     do tokens.next()
-    switch(tokens.get())
-    case "elif"
-        do node.branch :: @parseElif(tokens)
-    case "else"
-        do node.branch :: @parseElse(tokens)
-    end switch
     ret node
 end func
-func parseElif(tokens: list<[]char>): \wreck1@StmtNode
-    ret @parseIf(tokens)
-end func
-func parseElse(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.name :: "_i\{tokens.idx()}"
-    do node.kind :: tokens.get()
+
+func parseElif(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var expr: \wreck1@ExprNode
+    var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+
+    do \util@expect(tokens.get(), "elif")
+    do tokens.next()
+    do \util@expect(tokens.get(), "(")
+    do tokens.next()
+    do expr :: @parseExpr(tokens, parent)
+    do \util@expect(tokens.get(), ")")
     do tokens.next()
     do \util@expect(tokens.get(), "{")
     do tokens.next()
-    while(tokens.get() <> "}")
-        do node.stmts.add(@parseStmt(tokens))
+
+    var node: \wreck1@StmtNode :: \wreck1@makeElifNode(expr, stmts, parent)
+    while(!tokens.term() & tokens.get()<>"}")
+        do @addStmt(tokens, node)
     end while
+    do \util@expect(tokens.get(), "}")
     do tokens.next()
     ret node
 end func
 
-func parseReturn(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.kind :: tokens.get()
+func parseElse(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+
+    do \util@expect(tokens.get(), "else")
     do tokens.next()
-    do node.expr :: @parseExpr(tokens)
+    do \util@expect(tokens.get(), "{")
+    do tokens.next()
+
+    var node: \wreck1@StmtNode :: \wreck1@makeElseNode(stmts, parent)
+    while(!tokens.term() & tokens.get()<>"}")
+        do @addStmt(tokens, node)
+    end while
+    do \util@expect(tokens.get(), "}")
+    do tokens.next()
     ret node
 end func
 
-func parseDo(tokens: list<[]char>): \wreck1@StmtNode
-    var node: \wreck1@StmtNode :: #\wreck1@StmtNode
-    do node.kind :: tokens.get()
+func parseReturn(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var expr: \wreck1@ExprNode
+
+    do \util@expect(tokens.get(), "return")
     do tokens.next()
-    do node.expr :: @parseExpr(tokens)
+    do expr :: @parseExpr(tokens, parent)
+
+    var parentFunc: \wreck1@StmtNode :: parent
+    while(parentFunc.kind <> %func_)
+        do parentFunc :: parentFunc.parent
+    end while
+    if(expr.type <> parentFunc.type)
+        do \util@crash("Value type \{expr.type.name} doesn't match function type \{parentFunc.type.name}")
+    end if
+
+    var node: \wreck1@StmtNode :: \wreck1@makeReturnNode(expr.type, expr, parent)
+    ret node
+end func
+
+func parseDo(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
+    var expr: \wreck1@ExprNode
+
+    do \util@expect(tokens.get(), "do")
+    do tokens.next()
+    do expr :: @parseExpr(tokens, parent)
+
+    var node: \wreck1@StmtNode :: \wreck1@makeDoNode(expr, parent)
     ret node
 end func
 
 
-func parseExpr(tokens: list<[]char>): \wreck1@ExprNode
-    ret @parseAssignment(tokens)
+func parseExpr(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    ret @parseAssignment(tokens, parent)
 end func
 
-func parseAssignment(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseOr(tokens)
+func parseAssignment(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var dist: \wreck1@ExprNode :: @parseOr(tokens, parent)
     if(tokens.term())
-        ret node
+        ret dist
     end if
-    if(tokens.get()<>\wreck1@assignSymbol | !\util@isAlpha(node.value[0]) | node.depth()<>1)
-        ret node
+    if(tokens.get() <> \wreck1@assignSymbol)
+        ret dist
+    end if
+    if(dist.kind <> %varRef)
+        switch(dist.kind)
+        case %funcCall
+            do \util@crash("Substitution error: \{dist.name} is a function")
+        case %constRef
+            do \util@crash("Constant \{dist.name} is immutable!")
+        case %op
+            do \util@crash("Substitution error: \{dist.op.symbol} is an operator")
+        case %literal
+            do \util@crash("Substitution error: \{dist.value} is a literal")
+        end switch
     end if
     do tokens.next()
-    do node :: \wreck1@makeExprNode(\wreck1@assignSymbol, node, @parseAssignment(tokens))
-    ret node
+    var src: \wreck1@ExprNode :: @parseAssignment(tokens, parent)
+    ret \wreck1@makeOpNode(\wreck1@assign([dist.type, src.type]), [dist, src])
 end func
 
-func parseOr(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseAnd(tokens)
+func parseOr(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parseAnd(tokens, parent)
     while loop(!tokens.term())
-        switch symbol(tokens.get())
+        switch(tokens.get())
         case \wreck1@orSymbol
             do tokens.next()
-            do node :: \wreck1@makeExprNode(symbol, node, @parseAnd(tokens))
+            var rhs: \wreck1@ExprNode :: @parseAnd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@or([lhs.type, rhs.type]), [lhs, rhs])
         default
             break loop
         end switch
     end while
-    ret node
+    ret lhs
 end func
 
-func parseAnd(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseRelational(tokens)
+func parseAnd(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parseRelational(tokens, parent)
     while loop(!tokens.term())
-        switch symbol(tokens.get())
+        switch(tokens.get())
         case \wreck1@andSymbol
             do tokens.next()
-            do node :: \wreck1@makeExprNode(symbol, node, @parseRelational(tokens))
+            var rhs: \wreck1@ExprNode :: @parseRelational(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@and([lhs.type, rhs.type]), [lhs, rhs])
         default
             break loop
         end switch
     end while
-    ret node
+    ret lhs
 end func
 
-func parseRelational(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseAdd(tokens)
+func parseRelational(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+    while loop(!tokens.term())
+        switch(tokens.get())
+        case \wreck1@eqSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@eq([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@neqSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@neq([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@ltSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@lt([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@leqSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@leq([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@gtSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@gt([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@geqSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseAdd(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@geq([lhs.type, rhs.type]), [lhs, rhs])
+        default
+            break loop
+        end switch
+    end while
+    ret lhs
+end func
+
+func parseAdd(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parseMul(tokens, parent)
     while loop(!tokens.term())
         switch symbol(tokens.get())
-        case \wreck1@eqSymbol, \wreck1@neqSymbol, \wreck1@ltSymbol, \wreck1@leqSymbol, \wreck1@gtSymbol, \wreck1@geqSymbol
+        case \wreck1@addSymbol
             do tokens.next()
-            do node :: \wreck1@makeExprNode(symbol, node, @parseAdd(tokens))
+            var rhs: \wreck1@ExprNode :: @parseMul(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@add([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@subSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseMul(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@sub([lhs.type, rhs.type]), [lhs, rhs])
         default
             break loop
         end switch
     end while
-    ret node
+    ret lhs
 end func
 
-func parseAdd(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseMul(tokens)
+func parseMul(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parseUnary(tokens, parent)
     while loop(!tokens.term())
-        switch symbol(tokens.get())
-        case \wreck1@addSymbol, \wreck1@subSymbol
+        switch(tokens.get())
+        case \wreck1@mulSymbol
             do tokens.next()
-            do node :: \wreck1@makeExprNode(symbol, node, @parseMul(tokens))
+            var rhs: \wreck1@ExprNode :: @parseUnary(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@mul([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@divSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseUnary(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@div([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@remSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseUnary(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@rem([lhs.type, rhs.type]), [lhs, rhs])
         default
             break loop
         end switch
     end while
-    ret node
+    ret lhs
 end func
 
-func parseMul(tokens: list<[]char>): \wreck1@ExprNode
-    var node: \wreck1@ExprNode :: @parseUnary(tokens)
-    while loop(!tokens.term())
-        switch symbol(tokens.get())
-        case \wreck1@mulSymbol, \wreck1@divSymbol
-            do tokens.next()
-            do node :: \wreck1@makeExprNode(symbol, node, @parseUnary(tokens))
-        default
-            break loop
-        end switch
-    end while
-    ret node
-end func
-
-func parseUnary(tokens: list<[]char>): \wreck1@ExprNode
+func parseUnary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
     switch(tokens.get())
     case \wreck1@negSymbol
         do tokens.next()
-        var primaryNode: \wreck1@ExprNode :: @parsePrimary(tokens)
-        do \type@type(primaryNode, %undetermined, null) {やばい!!!}
-        var zeroNode: \wreck1@ExprNode :: \wreck1@makeExprLeaf(\wreck1@defaultValue(primaryNode.type))
-        ret \wreck1@makeExprNode("-", zeroNode, primaryNode)
+        var primary: \wreck1@ExprNode :: @parsePrimary(tokens, parent)
+        ret \wreck1@makeOpNode(\wreck1@neg([primary.type]), [primary])
     case \wreck1@notSymbol
         do tokens.next()
-        ret \wreck1@makeExprNode("=", \wreck1@makeExprLeaf("false"), @parsePrimary(tokens))
+        var primary: \wreck1@ExprNode :: @parsePrimary(tokens, parent)
+        ret \wreck1@makeOpNode(\wreck1@not([primary.type]), [primary])
     default
-        ret @parsePrimary(tokens)
+        ret @parsePrimary(tokens, parent)
     end switch
 end func
 
-func parsePrimary(tokens: list<[]char>): \wreck1@ExprNode
+func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
     var token: []char :: tokens.get()
     var node: \wreck1@ExprNode
+
     if(token = "(")
         do tokens.next()
-        do node :: @parseExpr(tokens)
+        do node :: @parseExpr(tokens, parent)
         do \util@expect(tokens.get(), ")")
         do tokens.next()
+
     ; elif(token = "{") //struct
     ; elif(token = "[") //array
-    ; elif(token = "\"") //syntax sugar for uint8[]
-    elif(token="true" | token="false")
-        do node :: \wreck1@makeExprLeaf(token)
+    ; elif(token = "\"") //syntax sugar for []char
+    elif(!\util@isNull(@literalToType(token))) {literal}
+        do node :: \wreck1@makeLiteralNode(token, @literalToType(token))
         do tokens.next()
-    elif(\util@isAlpha(token[0]))
-        ; var-ref | func-call
-        do node :: \wreck1@makeExprLeaf(token)
+
+    elif(\util@isAlpha(token[0])) {var-ref | const-ref | func-call}
+        var name: []char :: token
+        var args: []\wreck1@ExprNode :: #[0]\wreck1@ExprNode
+
         do tokens.next()
-        if(!tokens.term() & tokens.get()="(")
+        if(!tokens.term() & tokens.get()="(") {func-call}
             do tokens.next()
             while(tokens.get() <> ")")
-                do node.args.add(\wreck1@makeExprLeaf(tokens.get()))
-                do tokens.next()
-                do \util@expect(tokens.get(), ",")
-                do tokens.next()
+                do args :~ [@parseExpr(tokens, parent)]
+                if(tokens.get() = ",")
+                    do tokens.next()
+                else
+                    do \util@expect(tokens.get(), ")")
+                end if
             end while
-            do node.value :~ "("
+
+            var funcStmt: \wreck1@StmtNode :: \wreck1@findFunc(name, parent)
+            if(\util@isNull(funcStmt))
+                do \util@crash("No such function found: \{name}")
+            end if
+            do node :: \wreck1@makeFuncCallNode(name, funcStmt.type, args)
+            ; var namespaceEntry: \wreck1@Namespace :: namespace.get(node.value, &)
+            ; do node.type :: namespaceEntry.type
             do tokens.next()
+        else {var-ref | const-ref}
+            var targetStmt: \wreck1@StmtNode :: \wreck1@findVarOrConst(name, parent)
+            if(\util@isNull(targetStmt))
+                do \util@crash("No such variable of constant found: \{name}")
+            end if
+            switch(targetStmt.kind)
+            case %var_
+                do node :: \wreck1@makeVarRefNode(name, targetStmt.type)
+            case %const_
+                do node :: \wreck1@makeConstRefNode(name, targetStmt.type)
+            end switch
         end if
-    elif(\util@isNum(token[0]))
-        do node :: \wreck1@makeExprLeaf(token)
-        do tokens.next()
     else
         do \util@crash("Unknown primary expr: \{token}")
     end if

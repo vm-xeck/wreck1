@@ -157,7 +157,7 @@ func spread(type: \wreck1@Type_, node: \wreck1@ExprNode)
     end if
 end func
 
-func opToReturnType(op: []char, argType: \wreck1@Type_): \wreck1@Type_
++func opToReturnType(op: []char, argType: \wreck1@Type_): \wreck1@Type_
     switch(op)
     case "=", "<>", "<", "<=", ">", ">="
         ret %bool_
@@ -167,22 +167,20 @@ func opToReturnType(op: []char, argType: \wreck1@Type_): \wreck1@Type_
 end func
 
 
-+func makeMetadata(ast: \wreck1@Ast): \wreck1@Namespace
++func initNamespace(): \wreck1@Namespace
     var root: \wreck1@Namespace :: #\wreck1@Namespace
     do root.isRoot :: true
-    do ast.stmts.head()
-    do root.names :: @stmtsToMetadatas(ast.stmts, root)
     ret root
 end func
 
 {debugv}
-func shapeOfMetadata(metadata: \wreck1@Namespace, indent: []char)
-    do cui@print("\{indent}\{(metadata.name="")?("(nameless)", metadata.name)}\n")
++func shapeOfNamespace(namespace: \wreck1@Namespace, indent: []char)
+    do cui@print("\{indent}\{(namespace.name="")?("(nameless)", namespace.name)}: \{\wreck1@typeToStr(namespace.type)}\n")
     do cui@flush()
-    do metadata.names.head()
-    while(!metadata.names.term())
-        do shapeOfMetadata(metadata.names.get(), indent.replace("|", " ")~"|")
-        do metadata.names.next()
+    do namespace.names.head()
+    while(!namespace.names.term())
+        do shapeOfNamespace(namespace.names.get(), indent.replace("|", " ")~"|")
+        do namespace.names.next()
     end while
 end func
 {debug^}
