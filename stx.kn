@@ -244,28 +244,28 @@ func parseExpr(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
 end func
 
 func parseAssignment(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
-    var dist: \wreck1@ExprNode :: @parseOr(tokens, parent)
+    var dest: \wreck1@ExprNode :: @parseOr(tokens, parent)
     if(tokens.term())
-        ret dist
+        ret dest
     end if
     if(tokens.get() <> \wreck1@assignSymbol)
-        ret dist
+        ret dest
     end if
-    if(dist.kind <> %varRef)
-        switch(dist.kind)
+    if(dest.kind <> %varRef)
+        switch(dest.kind)
         case %funcCall
-            do \util@crash("Substitution error: \{dist.name} is a function")
+            do \util@crash("Substitution error: \{dest.name} is a function")
         case %constRef
-            do \util@crash("Constant \{dist.name} is immutable!")
+            do \util@crash("Constant \{dest.name} is immutable!")
         case %op
-            do \util@crash("Substitution error: \{dist.op.symbol} is an operator")
+            do \util@crash("Substitution error: \{dest.op.symbol} is an operator")
         case %literal
-            do \util@crash("Substitution error: \{dist.value} is a literal")
+            do \util@crash("Substitution error: \{dest.value} is a literal")
         end switch
     end if
     do tokens.next()
     var src: \wreck1@ExprNode :: @parseAssignment(tokens, parent)
-    ret \wreck1@makeOpNode(\wreck1@assign([dist.type, src.type]), [dist, src])
+    ret \wreck1@makeOpNode(\wreck1@assign([dest.type, src.type]), [dest, src])
 end func
 
 func parseOr(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
