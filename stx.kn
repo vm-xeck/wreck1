@@ -254,9 +254,9 @@ func parseAssignment(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@Ex
     if(dest.kind <> %varRef)
         switch(dest.kind)
         case %funcCall
-            do \util@crash("Substitution error: \{dest.name} is a function")
+            do \util@crash("Substitution error: \{dest.ref.name} is a function")
         case %constRef
-            do \util@crash("Constant \{dest.name} is immutable!")
+            do \util@crash("Constant \{dest.ref.name} is immutable!")
         case %op
             do \util@crash("Substitution error: \{dest.op.symbol} is an operator")
         case %literal
@@ -423,24 +423,22 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
                 end if
             end while
 
-            var funcStmt: \wreck1@StmtNode :: \wreck1@findFunc(name, parent)
-            if(\util@isNull(funcStmt))
+            var target: \wreck1@StmtNode :: \wreck1@findFunc(name, parent)
+            if(\util@isNull(target))
                 do \util@crash("No such function found: \{name}")
             end if
-            do node :: \wreck1@makeFuncCallNode(name, funcStmt.type, args)
-            ; var namespaceEntry: \wreck1@Namespace :: namespace.get(node.value, &)
-            ; do node.type :: namespaceEntry.type
+            do node :: \wreck1@makeFuncCallNode(target, args)
             do tokens.next()
         else {var-ref | const-ref}
-            var targetStmt: \wreck1@StmtNode :: \wreck1@findVarOrConst(name, parent)
-            if(\util@isNull(targetStmt))
+            var target: \wreck1@StmtNode :: \wreck1@findVarOrConst(name, parent)
+            if(\util@isNull(target))
                 do \util@crash("No such variable of constant found: \{name}")
             end if
-            switch(targetStmt.kind)
+            switch(target.kind)
             case %var_
-                do node :: \wreck1@makeVarRefNode(name, targetStmt.type)
+                do node :: \wreck1@makeVarRefNode(target)
             case %const_
-                do node :: \wreck1@makeConstRefNode(name, targetStmt.type)
+                do node :: \wreck1@makeConstRefNode(target)
             end switch
         end if
     else

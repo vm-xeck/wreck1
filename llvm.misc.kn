@@ -1,0 +1,101 @@
+class P()
+    +var name: []char
+    +var path: []char
+    +var isGlobal: bool
+    +var num: int
+    +var isFunc: bool
+    +func fullName(): []char
+        ret "\{me.isGlobal?("@","%")}\{path}.\{num}"
+    end func
+end class
+
+func makeP(name: []char, path: []char, isFunc: bool): @P
+    var p: @P :: #@P
+    do p.name :: name
+    do p.path :: path
+    do p.isGlobal :: name = path
+    do p.isFunc :: isFunc
+    ret p
+end func
+
+
+class PathStorage()
+    var storage: list<@P>
+    *func ctor()
+        do me.storage :: #list<@P>
+    end func
+    +func getFunc(name: []char, existed: &bool): @P
+        do me.storage.tail()
+        while(!me.storage.term())
+            if(me.storage.get().name = name & me.storage.get().isFunc)
+                do existed :: true
+                ret me.storage.get()
+            end if
+            do me.storage.prev()
+        end while
+        do existed :: false
+        ret null
+    end func
+    +func getVarOrConst(name: []char, existed: &bool): @P
+        do me.storage.tail()
+        while(!me.storage.term())
+            if(me.storage.get().name = name & !me.storage.get().isFunc)
+                do existed :: true
+                ret me.storage.get()
+            end if
+            do me.storage.prev()
+        end while
+        do existed :: false
+        ret null
+    end func
+    +func existFunc(name: []char): bool
+        var existed: bool
+        do me.getFunc(name, existed)
+        ret existed
+    end func
+    +func existVarOrConst(name: []char): bool
+        var existed: bool
+        do me.getVarOrConst(name, existed)
+        ret existed
+    end func
+    +func getNum(path: []char): int
+        do me.storage.tail()
+        while(!me.storage.term())
+            if(me.storage.get().path = path)
+                ret me.storage.get().num
+            end if
+            do me.storage.prev()
+        end while
+        ret -1
+    end func
+    +func add(name: []char, path: []char, isFunc: bool)
+        var p: @P :: @makeP(name, path, isFunc)
+        do path.num :: me.getNum(path.path + 1)
+        do me.storage.add()
+    end func
+end class
+
+
+func nodeToLlvmName(node: \wreck1@StmtNode): []char
+    var path: [][]char :: #[0,0]char
+    while(node.kind <> %root)
+        do path :~ [node.name.split(".").reverse()[0]]
+        {"%cool_func._if2._case0._while3.inner_cooler_func"->"inner_cooler_func"}
+        do node :: node.parent
+    end while
+    ret ^path=1?("@","%") ~ path.reverse().join(".")
+    {"%cool_func._if2._case0._while3.inner_cooler_func.hoge"みたいになる}
+end func
+
+
+func dropTypeSfx(value: []char, type: \wreck1@Type): []char
+    if(\util@isNull(type.sfx)) {いちおう念のため}
+        ret value
+    end if
+    if(value.sub(^value-^type.sfx-1, -1) = type.sfx)
+        ret value.sub(0, ^value-^type.sfx)
+    else
+        do \util@crash("\{value} is supposed to have type \{type.name} but has different suffix")
+        ret null
+    end if
+end func

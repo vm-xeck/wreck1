@@ -177,8 +177,8 @@ end func
     end enum
 
     +var kind: ExprKind
-    +var name: []char {func-call | var-ref | const-ref}
     +var value: []char {literal}
+    +var ref: @StmtNode {func-call | var-ref | const-ref}
     +var op: @Op {operator}
     +var type: @Type
     +var args: []ExprNode
@@ -194,28 +194,28 @@ end func
     end func
 end class
 
-+func makeFuncCallNode(name: []char, type: @Type, args: []@ExprNode): @ExprNode
++func makeFuncCallNode(ref: @StmtNode, args: []@ExprNode): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.kind :: %funcCall
-    do node.name :: name
-    do node.type :: type
+    do node.type :: ref.type
+    do node.ref :: ref
     do node.args :: args
     ret node
 end func
 
-+func makeVarRefNode(name: []char, type: @Type): @ExprNode
++func makeVarRefNode(ref: @StmtNode): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.kind :: %varRef
-    do node.name :: name
-    do node.type :: type
+    do node.type :: ref.type
+    do node.ref :: ref
     ret node
 end func
 
-+func makeConstRefNode(name: []char, type: @Type): @ExprNode
++func makeConstRefNode(ref: @StmtNode): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.kind :: %constRef
-    do node.name :: name
-    do node.type :: type
+    do node.type :: ref.type
+    do node.ref :: ref
     ret node
 end func
 

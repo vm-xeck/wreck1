@@ -1,0 +1,379 @@
+include type
+include inst
+include misc
+
+
++func print(ast: \wreck1@StmtNode)
+    do @init :: "define void @_() {\n"
+    do @unnamedLocal :: 1
+    do @whileCount :: 0
+    do @ifCount :: 0
+    do @pathStorage :: #@PathStoreage
+
+    do ast.stmts.head()
+    while(!ast.stmts.term())
+        switch(ast.stmts.get().kind)
+        case %func_
+            do cui@print(@funcToLlvm(ast.stmts.get()))
+        case %var_
+            do cui@print(@varToLlvm(ast.stmts.get()))
+        case %const_
+            do cui@print(@constToLlvm(ast.stmts.get()))
+        default
+            do \util@crash("Couldn't LLVMize unknown stmt kind: \{ast.stmts.get().kind $ int}")
+        end switch
+        do ast.stmts.next()
+    end while
+    do @init :~ @ret_(@void(), null)
+    do @init :~ "}\n"
+    do cui@print(@init)
+end func
+
+var init: []char
+var unnamedLocal: int
+var whileCount: int
+var ifCount: int
+var caseCount: int
+var pathStorage: @PathStoreage
+
+{TODO: delete this v}
+func wt2lt(type: \wreck1@Type_): []char
+    switch(type)
+    case %bool_
+        ret "i1"
+    case %int8, %uint8
+        ret "i8"
+    case %int16, %uint16
+        ret "i16"
+    case %int32, %uint32
+        ret "i32"
+    case %int64, %uint64
+        ret "i64"
+    case %float32
+        ret "float"
+    case %float64
+        ret "double"
+    default
+        do \util@crash("Invalid type: Type (\{\wreck1@typeToStr(type)}) has no corresponding LLVM type")
+        ret ""
+    end switch
+end func
+{TODO: delete this^}
+
+func stmtToLlvm(node: \wreck1@StmtNode): []char
+    {debugv}
+    do cui@print("stmtToLlvm: \{node.kind $ int}\n")
+    do cui@flush()
+    {debug^}
+    switch(node.kind)
+    case %func_
+        ret @funcToLlvm(node)
+    case %var_
+        ret @varToLlvm(node)
+    case %const_
+        ret @constToLlvm(node)
+    case %while_
+        ret @whileToLlvm(node)
+    case %ifHead, %ifTail
+        ret @ifToLlvm(node)
+    case %return
+        ret @returnToLlvm(node)
+    case %do_
+        ret @doToLlvm(node)
+    default
+        do \util@crash("Invalid stmt kind: \{node.kind $ int}")
+        ret ""
+    end switch
+end func
+
+func funcToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: ""
+    var argAry: [][]char :: #[0,0]char
+    for i(0, ^node.args-1)
+        do argAry :~ ["%\{node.args[i].name} \{@typeToLlvmType(node.args[i].type)}"]
+    end while
+    var args: []char :: argAry.join(", ")
+    do llvm :~ "define \{@typeToLlvmType(node.type)} @\{node.name}(\{args}) {\n"
+    if(node.name = "main")
+        do llvm :~ "call void @_()\n"
+    end if
+    do node.name :: "@" ~ node.name {LLVMの関数は常にトップレベル}
+
+    do node.stmts.head()
+    while(!node.stmts.term())
+        do llvm :~ @stmtToLlvm(node.stmts.get())
+        do node.stmts.next()
+    end while
+    do llvm :~ "}\n"
+    ret llvm
+end func
+
+func varToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: ""
+    var type: @Type :: @typeToLlvmType(node.type)
+    do node.name :: @nodeToLlvmName(node)
+    if(node.parent.kind = %root)
+        do llvm :~ "\{node.name} = global \{type} \{type.defaultValue}\n"
+        if(!\util@isNull(node.expr))
+            do init :~ @exprToLlvm(node.expr)
+            do init :~ @store(type, "%\{unnamedLocal}", "\{node.name}")
+        end if
+    else
+        do llvm :~ @alloca(fullName, type)
+        if(!\util@isNull(node.expr))
+            do llvm :~ @exprToLlvm(node.expr)
+            do llvm :~ @store(type, "%\{unnamedLocal}", node.name)
+        else
+            do llvm :~ @store(type, type.defaultValue, node.name)
+        end if
+    end if
+
+    ret llvm
+end func
+
+func constToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: ""
+    var type: @Type :: @typeToLlvmType(node.type)
+    do node.name :: @nodeToLlvmName(node)
+    if(node.parent.kind = %root)
+        do llvm :~ "\{node.name} = global \{type} \{type.defaultValue}\n"
+        if(!\util@isNull(node.expr))
+            do init :~ @exprToLlvm(node.expr)
+            do init :~ @store(type, "%\{unnamedLocal}", "\{node.name}")
+        end if
+    else
+        do llvm :~ @alloca(node.name, type)
+        if(!\util@isNull(node.expr))
+            do llvm :~ @exprToLlvm(node.expr)
+            do llvm :~ @store(type, "%\{unnamedLocal}", node.name)
+        else
+            do llvm :~ @store(type, type.defaultValue, node.name)
+        end if
+    end if
+
+    ret llvm
+end func
+
+func whileToLlvm(node: \wreck1@StmtNode, parent: \wreck1@Namespace): []char
+    do @whileCount :+ 1
+    do node.name :: "_while\{@whileCount}"
+
+    var llvm: []char :: @unconditionalBr("%\{node.name}.cond")
+    do llvm :~ "\{node.name}.cond:\n"
+    do llvm :~ @exprToLlvm(node.expr)
+    do llvm :~ @br("%\{unnamedLocal}", "%\{node.name}.body", "%\{node.name}.end")
+    do llvm :~ "\{node.name}.body:\n"
+    do node.stmts.head()
+    while(!node.stmts.term())
+        do llvm :~ @stmtToLlvm(node.stmts.get())
+        do node.stmts.next()
+    end while
+    do llvm :~ @unconditionalBr("%\{node.name}.cond")
+    do llvm :~ "\{node.name}.end:\n"
+
+    ret llvm
+end func
+
+func ifToLlvm(node: \wreck1@StmtNode): []char
+    switch(node.kind)
+    case %ifHead
+        do @ifCount :+ 1
+        do @caseCount :: 0
+    case %ifTail
+        do @caseCount :+ 1
+    end switch
+    var ifName: []char :: "_if\{@ifCount}"
+    do node.name :: "\{ifName}.case\{@caseCount}"
+
+    var llvm: []char :: @unconditionalBr("%\{node.name}.cond")
+
+    do llvm :~ @exprToLlvm(node.expr)
+    do llvm :~ @br("%\{unnamedLocal}", "%\{node.name}.body", "%\{node.}")
+
+    while(!\util@isNull(node))
+        do label :: node.name
+        do myMetadata :: parent.get(node.name, &)
+        do myMetadata.type :: parent.type
+        do myMetadata.count :: parent.count
+
+        if(node.kind="if" | node.kind="elif")
+            do llvm :~ "\{label}.cond:\n"
+            do llvm :~ @exprToLlvm(node.expr, myMetadata)
+            var nextLabel: []char :: ""
+            if(\util@isNull(node.branch))
+                do nextLabel :: "\{origLabel}.end"
+            elif(node.branch.kind = "elif")
+                do nextLabel :: "\{node.branch.name}.cond"
+            elif(node.branch.kind = "else")
+                do nextLabel :: "\{node.branch.name}.body"
+            else {impossible!!}
+                do \util@crash("Invalid branch kind: \{node.branch.kind}")
+            end if
+            do llvm :~ "br i1 %\{myMetadata.count}, label %\{label}.body, label %\{nextLabel}\n"
+        end if
+
+        do llvm :~ "\{label}.body:\n"
+        do node.stmts.head()
+        do myMetadata.names.head()
+        while(!node.stmts.term())
+            do llvm :~ @stmtToLlvm(node.stmts.get(), myMetadata)
+            do node.stmts.next()
+            do myMetadata.names.next()
+        end while
+        do llvm :~ "br label %\{origLabel}.end\n"
+        do parent.count :: myMetadata.count
+        do node :: node.branch
+    end while
+
+    do llvm :~ "\{origLabel}.end:\n"
+    ret llvm
+end func
+
+func returnToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: @exprToLlvm(node.expr, parent)
+    do llvm :~ @ret_(@typeToLlvmType(node.type), "%\{unnamedLocal}")
+    ret llvm
+end func
+
+func doToLlvm(node: \wreck1@StmtNode): []char
+    ret @exprToLlvm(node.expr, parent)
+end func
+
+
+func exprToLlvm(node: \wreck1@ExprNode): []char
+    switch(node.kind)
+    case %funcCall
+        ret @callToLlvm(node)
+    case %varRef, %constRef
+        ret @refToLlvm(node)
+    case %op
+        ret @opToLlvm(node)
+    case %literal
+        ret @literalToLlvm(node)
+    end switch
+    ret null {到達不可能だが、これがないとKuinコンパイラのwarningが出る気がする}
+end func
+
+func opToLlvm(node: \wreck1@ExprNode): []char
+    var llvm: []char :: ""
+    var exprs: [][]char :: #[0,0]char
+    for i(0, ^node.args-1)
+        do llvm :~ @exprToLlvm(node.args[i])
+        do exprs :~ ["%\{@unnamedLocal}"]
+    end for
+
+    switch(node.op.symbol)
+    case \wreck1@assignSymbol
+        do llvm :~ @store(@typeToLlvmType(node.type), exprs[1], node.args[0].ref.name)
+    case "|"{TODO: kokokara}
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = or \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+    case "&"
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = and \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+    case "=", "<>", "<", "<=", ">", ">="
+        var opcode: []char
+        var cond: []char
+        switch(node.lhs.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do opcode :: "icmp"
+        case %float32, %float64
+            do opcode :: "fcmp"
+        end switch
+        switch(node.value)
+        case "="
+            do cond :: "eq"
+        case "<>"
+            do cond :: "ne"
+        default
+            switch(node.lhs.type)
+            case %int8, %int16, %int32, %int64
+                do cond :: "s"
+            case %bool_, %uint8, %uint16, %uint32, %uint64
+                do cond :: "u"
+            end switch
+            switch(node.value[0])
+            case '<'
+                do cond :~ "l"
+            case '>'
+                do cond :~ "g"
+            end switch
+            if(node.value[^node.value-1] = '=')
+                do cond :~ "e"
+            else
+                do cond :~ "t"
+            end if
+        end switch
+        do parent.count :+ 1
+        do llvm :~ "%\{parent.count} = \{opcode} \{cond} \{@wt2lt(node.lhs.type)} %\{lhs}, %\{rhs}\n"
+    case "+"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = add \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fadd \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "-"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = sub \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fsub \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "*"
+        do parent.count :+ 1
+        switch(node.type)
+        case %bool_, %int8, %int16, %int32, %int64, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = mul \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fmul \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    case "/"
+        do parent.count :+ 1
+        switch(node.type)
+        case %int8, %int16, %int32, %int64
+            do llvm :~ "%\{parent.count} = idiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %bool_, %uint8, %uint16, %uint32, %uint64
+            do llvm :~ "%\{parent.count} = udiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        case %float32, %float64
+            do llvm :~ "%\{parent.count} = fdiv \{@wt2lt(node.type)} %\{lhs}, %\{rhs}\n"
+        end switch
+    end switch
+    ret llvm
+end func
+
+func callToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
+    var llvm: []char :: ""
+    var argAry: [][]char :: #[0,0]char
+    for i(0, ^node.args-1)
+        do llvm :~ @exprToLlvm(node.args[i])
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} %\{@unnamedLocal}"]
+    end for
+    var args: []char :: argAry.join(", ")
+    do @unnamedLocal :+ 1
+    do llvm :~ @call("%\{unnamedLocal}", "\{@typeToLlvmType(node.type)}", node.ref.name, args)
+    ret llvm
+end func
+
+func refToLlvm(node: \wreck1@ExprNode, parent: \wreck1@Namespace): []char
+    do @unnamedLocal :+ 1
+    ret @load("%\{@unnamedLocal}", "\{@typeToLlvmType(node.type)}", node.ref.name)
+end func
+
+func literalToLlvm(node: \wreck1@ExprNode): []char
+    var type: @Type :: @typeToLlvmType(node.type)
+    var literal: []char :: @dropTypeSfx(node.value)
+    switch(type)
+    case @i(1), @i(8), @i(16), @i(32), @i(64)
+        do @unnamedLocal :+ 1
+        ret @add("%\{@unnamedLocal}", type, literal, type.defaultValue)
+    case @float_(), @double()
+        do @unnamedLocal :+ 1
+        ret @fadd("%\{@unnamedLocal}", type, literal, type.defaultValue)
+    default
+        do \util@crash("Literals of type \{type} are not yet supported by LLVMizer")
+        ret null
+    end switch
+end func

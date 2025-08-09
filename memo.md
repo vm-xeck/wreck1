@@ -16,4 +16,7 @@
 
 ☆ExprNode.valueには演算子の記号を入れてもいいし、何も入れなくてもいい気もする
 
-☆本当のリファクタリングはこれからだ!
+* TODO: out.kn
+  * TODO: ifToLlvmで、case群の終端をどうやって判定するか？
+  * TODO: pathStorage不要
+  * TODO: @typeToLlvmTypeを\llvm.instに渡すとき文字列化すべきでない
