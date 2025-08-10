@@ -73,6 +73,15 @@ func funcToLlvm(node: \wreck1@StmtNode): []char
         do llvm :~ @stmtToLlvm(node.stmts.get())
         do node.stmts.next()
     end while
+
+{最後がterminator instructionじゃないと怒られるしWreck1の状態でreturn検査したくない}
+{本当はreturnがちゃんとあるか調べてコンパイルエラーを出すべきかも}
+    do node.stmts.tail()
+    if(node.stmts.get().kind <> %return)
+        var type: @Type :: @typeToLlvmType(node.type)
+        do llvm :~ @ret_(type, type.defaultValue)
+    end if
+
     do llvm :~ "}\n"
     ret llvm
 end func
