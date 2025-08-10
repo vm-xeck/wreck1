@@ -6,7 +6,7 @@ func main()
 
     var tokens: list<[]char> :: \lex@tokenize(code)
     var ast: \wreck1@StmtNode :: \stx@parse(tokens)
-    do namespace.names :: \type@stmtsToMetadatas(ast.stmts, namespace)
-    do \type@shapeOfNamespace(namespace, "")
-    do \out@printLlvm(ast, namespace)
+    ; do namespace.names :: \type@stmtsToMetadatas(ast.stmts, namespace)
+    ; do \type@shapeOfNamespace(namespace, "")
+    do \llvm@print(ast)
 end func

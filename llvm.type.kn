@@ -80,7 +80,7 @@ func typeToLlvmType(type: \wreck1@Type): @Type
     case \wreck1@float64()
         ret @double()
     default
-        \util@crash("Type \{type.name} can't be converted to LLVM type yet")
+        do \util@crash("Type \{type.name} can't be converted to LLVM type yet")
         ret null
     end switch
 end func

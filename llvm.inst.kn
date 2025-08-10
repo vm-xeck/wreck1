@@ -15,7 +15,7 @@ func unconditionalBr(dest: []char): []char
 end func
 
 func fneg(result: []char, ty: @Type, op1: []char): []char
-    ret "  \{rersult} = fneg \{ty} \{op1}\n"
+    ret "  \{result} = fneg \{ty} \{op1}\n"
 end func
 
 func add(result: []char, ty: @Type, op1: []char, op2: []char): []char
@@ -90,6 +90,18 @@ func store(ty: @Type, value: []char, ptr: []char): []char
     ret "  store \{ty} \{value}, ptr \{ptr}\n"
 end func
 
+func icmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = icmp \{cond} \{ty} \{op1}, \{op2}\n"
+end func
+
+func fcmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fcmp \{cond} \{ty} \{op1}, \{op2}\n"
+end func
+
 func call(result: []char, ty: @Type, fnptrval: []char, args: []char): []char
-    ret "  \{result} = call \{ty} \{fnptrval}(\{args})\n"
+    if(ty = @void())
+        ret "  call \{ty} \{fnptrval}(\{args})\n"
+    else
+        ret "  \{result} = call \{ty} \{fnptrval}(\{args})\n"
+    end if
 end func

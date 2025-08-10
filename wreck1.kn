@@ -230,6 +230,7 @@ end func
 
 +func makeLiteralNode(value: []char, type: @Type): @ExprNode
     var node: @ExprNode :: #@ExprNode
+    do node.kind :: %literal
     do node.value :: value
     do node.type :: type
     ret node

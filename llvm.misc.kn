@@ -5,7 +5,7 @@ class P()
     +var num: int
     +var isFunc: bool
     +func fullName(): []char
-        ret "\{me.isGlobal?("@","%")}\{path}.\{num}"
+        ret "\{me.isGlobal?("@","%")}\{me.path}.\{me.num}"
     end func
 end class
 
@@ -50,12 +50,12 @@ class PathStorage()
     end func
     +func existFunc(name: []char): bool
         var existed: bool
-        do me.getFunc(name, existed)
+        do me.getFunc(name, &existed)
         ret existed
     end func
     +func existVarOrConst(name: []char): bool
         var existed: bool
-        do me.getVarOrConst(name, existed)
+        do me.getVarOrConst(name, &existed)
         ret existed
     end func
     +func getNum(path: []char): int
@@ -70,8 +70,8 @@ class PathStorage()
     end func
     +func add(name: []char, path: []char, isFunc: bool)
         var p: @P :: @makeP(name, path, isFunc)
-        do path.num :: me.getNum(path.path + 1)
-        do me.storage.add()
+        do p.num :: me.getNum(p.path) + 1
+        do me.storage.add(p)
     end func
 end class
 
@@ -79,20 +79,23 @@ end class
 func nodeToLlvmName(node: \wreck1@StmtNode): []char
     var path: [][]char :: #[0,0]char
     while(node.kind <> %root)
-        do path :~ [node.name.split(".").reverse()[0]]
+        var names: [][]char :: node.name.split(".")
+        do path :: [names[^names-1]] ~ path
         {"%cool_func._if2._case0._while3.inner_cooler_func"->"inner_cooler_func"}
         do node :: node.parent
     end while
-    ret ^path=1?("@","%") ~ path.reverse().join(".")
-    {"%cool_func._if2._case0._while3.inner_cooler_func.hoge"みたいになる}
+    if(^path = 1) {global}
+        ret "@" ~ path.join(".")
+    else {local}
+        ret "%" ~ path.join(".").sub(1, -1)
+        {既に命名されたグローバル変数のpfx'@'が混入しており、これを'%'で置換する}
+    end if
+    {"%cool_func._if2case0._while3.inner_cooler_func.hoge"みたいになる}
 end func
 
 
 func dropTypeSfx(value: []char, type: \wreck1@Type): []char
-    if(\util@isNull(type.sfx)) {いちおう念のため}
-        ret value
-    end if
-    if(value.sub(^value-^type.sfx-1, -1) = type.sfx)
+    if(value.sub(^value-^type.sfx, -1) = type.sfx)
         ret value.sub(0, ^value-^type.sfx)
     else
         do \util@crash("\{value} is supposed to have type \{type.name} but has different suffix")
