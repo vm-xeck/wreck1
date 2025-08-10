@@ -22,13 +22,16 @@ func addStmt(tokens: list<[]char>, parent: \wreck1@StmtNode)
     case "while"
         do parent.stmts.add(@parseWhile(tokens, parent))
     case "if"
-        do parent.stmts.add(@parseIf(tokens, parent))
+        var cases: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
+        var ifContainer: \wreck1@StmtNode :: \wreck1@makeIfContainer(cases, parent)
+        do cases.add(@parseIf(tokens, ifContainer))
         while(!tokens.term() & tokens.get()="elif")
-            do parent.stmts.add(@parseElif(tokens, parent))
+            do cases.add(@parseElif(tokens, ifContainer))
         end while
         if(!tokens.term() & tokens.get()="else")
-            do parent.stmts.add(@parseElse(tokens, parent))
+            do cases.add(@parseElse(tokens, ifContainer))
         end if
+        do parent.stmts.add(ifContainer)
     case "return"
         do parent.stmts.add(@parseReturn(tokens, parent))
     case "do"

@@ -18,8 +18,8 @@ end func
         var_
         const_
         while_
-        ifHead
-        ifTail
+        ifContainer
+        ifCase
         return
         do_
     end enum
@@ -83,9 +83,17 @@ end func
     ret node
 end func
 
++func makeIfContainer(stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %ifContainer
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
 +func makeIfNode(expr: @ExprNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
     var node: @StmtNode :: #@StmtNode
-    do node.kind :: %ifHead
+    do node.kind :: %ifCase
     do node.expr :: expr
     do node.stmts :: stmts
     do node.parent :: parent
@@ -94,7 +102,7 @@ end func
 
 +func makeElifNode(expr: @ExprNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
     var node: @StmtNode :: #@StmtNode
-    do node.kind :: %ifTail
+    do node.kind :: %ifCase
     do node.expr :: expr
     do node.stmts :: stmts
     do node.parent :: parent
@@ -103,7 +111,7 @@ end func
 
 +func makeElseNode(stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
     var node: @StmtNode :: #@StmtNode
-    do node.kind :: %ifTail
+    do node.kind :: %ifCase
     do node.expr :: @makeLiteralNode("true", @bool_())
     do node.stmts :: stmts
     do node.parent :: parent

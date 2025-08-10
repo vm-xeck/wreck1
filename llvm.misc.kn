@@ -90,7 +90,7 @@ func nodeToLlvmName(node: \wreck1@StmtNode): []char
         ret "%" ~ path.join(".").sub(1, -1)
         {既に命名されたグローバル変数のpfx'@'が混入しており、これを'%'で置換する}
     end if
-    {"%cool_func._if2case0._while3.inner_cooler_func.hoge"みたいになる}
+    {"%cool_func._if2._case0._while3.inner_cooler_func.hoge"みたいになる}
 end func
 
 

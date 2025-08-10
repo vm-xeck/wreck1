@@ -33,7 +33,6 @@ var init: []char
 var unnamedLocal: int
 var whileCount: int
 var ifCount: int
-var caseCount: int
 var pathStorage: @PathStorage
 
 {TODO: delete this v}
@@ -70,8 +69,8 @@ func stmtToLlvm(node: \wreck1@StmtNode): []char
         ret @constToLlvm(node)
     case %while_
         ret @whileToLlvm(node)
-    case %ifHead, %ifTail
-        ret @ifToLlvm(node)
+    case %ifContainer
+        ret @ifContainerToLlvm(node)
     case %return
         ret @returnToLlvm(node)
     case %do_
@@ -170,58 +169,39 @@ func whileToLlvm(node: \wreck1@StmtNode): []char
     ret llvm
 end func
 
-func ifToLlvm(node: \wreck1@StmtNode): []char
-    switch(node.kind)
-    case %ifHead
-        do @ifCount :+ 1
-        do @caseCount :: 0
-    case %ifTail
-        do @caseCount :+ 1
-    end switch
-    var ifName: []char :: "_if\{@ifCount}"
-    do node.name :: "\{ifName}case\{@caseCount}"
+func ifContainerToLlvm(node: \wreck1@StmtNode): []char
+    do @ifCount :+ 1
+    var caseCount: int :: 0
+    do node.name :: "_if\{@ifCount}"
+    var llvm: []char :: @unconditionalBr("%\{node.name}")
+    do llvm :~ "\{node.name}:\n"
+    do llvm :~ @unconditionalBr("%\{node.name}._case\{caseCount}.cond")
+    do node.stmts.head()
+    while(!node.stmts.term())
+        do llvm :~ @caseToLlvm(node.stmts.get(), caseCount)
+        do caseCount :+ 1
+        do node.stmts.next()
+    end while
+    do llvm :~ "\{node.name}._case\{caseCount}.cond:\n"
+    do llvm :~ @unconditionalBr("%\{node.name}.end")
+    do llvm :~ "\{node.name}.end:\n"
+    ret llvm
+end func
 
-    var llvm: []char :: @unconditionalBr("%\{node.name}.cond")
-
+func caseToLlvm(node: \wreck1@StmtNode, caseCount: int): []char
+    do node.name :: "_case\{caseCount}"
+    var containerName: []char :: node.parent.name
+    var llvm: []char :: "\{containerName}.\{node.name}.cond:\n"
     do llvm :~ @exprToLlvm(node.expr)
-    do llvm :~ @br("%\{@unnamedLocal}", "%\{node.name}.body", "%\{ifName}.end")
+    do llvm :~ @br("%\{@unnamedLocal}", "%\{containerName}.\{node.name}.body", "%\{containerName}._case\{caseCount+1}.cond")
 
-    ; while(!\util@isNull(node))
-        ; do label :: node.name
-        ; do myMetadata :: parent.get(node.name, &)
-        ; do myMetadata.type :: parent.type
-        ; do myMetadata.count :: @unnamedLocal
-
-        ; if(node.kind="if" | node.kind="elif")
-            ; do llvm :~ "\{label}.cond:\n"
-            ; do llvm :~ @exprToLlvm(node.expr, myMetadata)
-            ; var nextLabel: []char :: ""
-            ; if(\util@isNull(node.branch))
-                ; do nextLabel :: "\{origLabel}.end"
-            ; elif(node.branch.kind = "elif")
-                ; do nextLabel :: "\{node.branch.name}.cond"
-            ; elif(node.branch.kind = "else")
-                ; do nextLabel :: "\{node.branch.name}.body"
-            ; else {impossible!!}
-                ; do \util@crash("Invalid branch kind: \{node.branch.kind}")
-            ; end if
-            ; do llvm :~ "br i1 %\{myMetadata.count}, label %\{label}.body, label %\{nextLabel}\n"
-        ; end if
-
-        ; do llvm :~ "\{label}.body:\n"
-        ; do node.stmts.head()
-        ; do myMetadata.names.head()
-        ; while(!node.stmts.term())
-            ; do llvm :~ @stmtToLlvm(node.stmts.get(), myMetadata)
-            ; do node.stmts.next()
-            ; do myMetadata.names.next()
-        ; end while
-        ; do llvm :~ "br label %\{origLabel}.end\n"
-        ; do @unnamedLocal :: myMetadata.count
-        ; do node :: node.branch
-    ; end while
-
-    ; do llvm :~ "\{origLabel}.end:\n"
+    do llvm :~ "\{containerName}.\{node.name}.body:\n"
+    do node.stmts.head()
+    while(!node.stmts.term())
+        do llvm :~ @stmtToLlvm(node.stmts.get())
+        do node.stmts.next()
+    end while
+    do llvm :~ @unconditionalBr("%\{containerName}.end")
     ret llvm
 end func
 
@@ -281,9 +261,19 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         end switch
         switch(node.op.symbol)
         case \wreck1@eqSymbol
-            do cond :~ "eq"
+            switch(@typeToLlvmType(node.args[0].type))
+            case @float_(), @double()
+                do cond :~ "eq"
+            default
+                do cond :: "eq"
+            end switch
         case \wreck1@neqSymbol
-            do cond :~ "ne"
+            switch(@typeToLlvmType(node.args[0].type))
+            case @float_(), @double()
+                do cond :~ "ne"
+            default
+                do cond :: "ne"
+            end switch
         case \wreck1@ltSymbol
             do cond :~ "lt"
         case \wreck1@leqSymbol
