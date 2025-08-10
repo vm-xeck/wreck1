@@ -33,30 +33,6 @@ var unnamedLocal: int
 var whileCount: int
 var ifCount: int
 
-{TODO: delete this v}
-func wt2lt(type: \wreck1@Type_): []char
-    switch(type)
-    case %bool_
-        ret "i1"
-    case %int8, %uint8
-        ret "i8"
-    case %int16, %uint16
-        ret "i16"
-    case %int32, %uint32
-        ret "i32"
-    case %int64, %uint64
-        ret "i64"
-    case %float32
-        ret "float"
-    case %float64
-        ret "double"
-    default
-        do \util@crash("Invalid type: Type (\{\wreck1@typeToStr(type)}) has no corresponding LLVM type")
-        ret ""
-    end switch
-end func
-{TODO: delete this^}
-
 func stmtToLlvm(node: \wreck1@StmtNode): []char
     switch(node.kind)
     case %func_
