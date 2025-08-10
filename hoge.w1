@@ -29,12 +29,12 @@ func main(): int8 {
         }
         do i <- i - 100y
     }
-    func inner(a: int8, i: int8, u: int8): int8 {
+    #func inner(a: int8, i: int8, u: int8): int8 {
         return a + i - u
     }
-    var hoge: int8 :: inner(2, 3, 4)
+    var hoge: int8 :: inner(2, 3, 4)#
     do aiu <- false
     const nothing: int64 :: 0
     do 3us + 2us
-    return global * i + 2y + 40y
+    return global * i + 2y + 40y #42#
 }
