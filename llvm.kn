@@ -291,7 +291,7 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         case @float_(), @double()
             do llvm :~ @fmul("%\{@unnamedLocal}", type, exprs[0], exprs[1])
         end switch
-    case "/"
+    case \wreck1@divSymbol
         do @unnamedLocal :+ 1
         switch(node.type)
         case \wreck1@int8(), \wreck1@int16(), \wreck1@int32(), \wreck1@int64()
@@ -301,6 +301,11 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         case \wreck1@float32(), \wreck1@float64()
             do llvm :~ @fdiv("%\{@unnamedLocal}", type, exprs[0], exprs[1])
         end switch
+    case \wreck1@notSymbol
+        do @unnamedLocal :+ 1
+        do llvm :~ @xor("%\{@unnamedLocal}", type, exprs[0], "true")
+    default
+        do \util@crash("Operator \{node.op.symbol} has no corresponding LLVM representation yet")
     end switch
     ret llvm
 end func
