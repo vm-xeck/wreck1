@@ -8,7 +8,6 @@ include misc
     do @unnamedLocal :: 1
     do @whileCount :: 0
     do @ifCount :: 0
-    do @pathStorage :: #@PathStorage
 
     do ast.stmts.head()
     while(!ast.stmts.term())
@@ -33,7 +32,6 @@ var init: []char
 var unnamedLocal: int
 var whileCount: int
 var ifCount: int
-var pathStorage: @PathStorage
 
 {TODO: delete this v}
 func wt2lt(type: \wreck1@Type_): []char
