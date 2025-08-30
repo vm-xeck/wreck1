@@ -19,7 +19,13 @@ end func
 end func
 
 +func expect(actual: []char, target: []char)
+    var actualStr: lib@Str :: #lib@Str
+    do actualStr.value :: actual
+    if(@isNull(actualStr))
+        do @crash("\{target} expected, but got (null).")
+    end if
+
     if(target <> actual)
-        do @crash("`\{target}` expected, but got `\{actual}`.")
+        do @crash("\{target} expected, but got \{actual}.")
     end if
 end func

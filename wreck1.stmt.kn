@@ -1,0 +1,176 @@
++class FuncArg()
+    +var name: []char
+    +var type: @Type
+end class
+
++func makeFuncArg(name: []char, type: @Type): @FuncArg
+    var funcArg: @FuncArg :: #@FuncArg
+    do funcArg.name :: name
+    do funcArg.type :: type
+    ret funcArg
+end func
+
++class StmtNode()
+    enum StmtKind
+        root
+
+        func_
+        var_
+        const_
+        while_
+        ifContainer
+        ifCase
+        return
+        do_
+    end enum
+
+    +var kind: StmtKind
+    +var name: []char
+    +var type: @Type
+    +var args: []@FuncArg
+    +var expr: @ExprNode
+    +var stmts: list<StmtNode>
+    +var parent: @StmtNode
+    *func ctor()
+        do me.args :: #[0]@FuncArg
+        do me.stmts :: #list<StmtNode>
+    end func
+end class
+
++func makeRootNode(): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %root
+    ret node
+end func
+
++func makeFuncNode(name: []char, type: @Type, args: []@FuncArg, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %func_
+    do node.name :: name
+    do node.type :: type
+    do node.args :: args
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeVarNode(name: []char, type: @Type, expr: @ExprNode, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %var_
+    do node.name :: name
+    do node.type :: type
+    do node.expr :: expr
+    do node.parent :: parent
+    ret node
+end func
+
++func makeConstNode(name: []char, type: @Type, expr: @ExprNode, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %const_
+    do node.name :: name
+    do node.type :: type
+    do node.expr :: expr
+    do node.parent :: parent
+    ret node
+end func
+
++func makeWhileNode(expr: @ExprNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %while_
+    do node.expr :: expr
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeIfContainer(stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %ifContainer
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeIfNode(expr: @ExprNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %ifCase
+    do node.expr :: expr
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeElifNode(expr: @ExprNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %ifCase
+    do node.expr :: expr
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeElseNode(stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %ifCase
+    do node.expr :: @makeLiteralNode("true", @bool_())
+    do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeReturnNode(type: @Type, expr: @ExprNode, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %return
+    do node.type :: type
+    do node.expr :: expr
+    do node.parent :: parent
+    ret node
+end func
+
++func makeDoNode(expr: @ExprNode, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %do_
+    do node.expr :: expr
+    do node.parent :: parent
+    ret node
+end func
+
++func findFunc(name: []char, parent: @StmtNode): @StmtNode
+    do parent.stmts.tail()
+    while(!parent.stmts.term())
+        var stmt: @StmtNode :: parent.stmts.get()
+        if(stmt.kind=%func_ & stmt.name=name)
+            ret stmt
+        end if
+        do parent.stmts.prev()
+    end while
+    if(parent.kind = %root)
+        ret null
+    else
+        ret findFunc(name, parent.parent)
+    end if
+end func
+
++func findVarOrConst(name: []char, parent: @StmtNode): @StmtNode
+    do parent.stmts.tail()
+    while(!parent.stmts.term())
+        var stmt: @StmtNode :: parent.stmts.get()
+        if((stmt.kind=%var_ | stmt.kind=%const_) & stmt.name=name)
+            ret stmt
+        end if
+        do parent.stmts.prev()
+    end while
+    if(parent.kind = %func_)
+        for i(0, ^parent.args-1)
+            if(parent.args[i].name = name)
+                var arg: @FuncArg :: parent.args[i]
+                ret @makeVarNode(arg.name, arg.type, null, parent)
+            end if
+        end for
+    end if
+    if(parent.kind = %root)
+        ret null
+    else
+        ret findVarOrConst(name, parent.parent)
+    end if
+end func

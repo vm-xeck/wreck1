@@ -1,0 +1,86 @@
+class Type()
+    +var name: []char
+    +var defaultValue: []char
+    +var size: int
+    +*func cmp(t: kuin@Class): int
+        var type2: Type :: t $ Type
+        if(me.name = type2.name)
+            ret 0
+        elif(me.name < type2.name)
+            ret -1
+        else
+            ret 1
+        end if
+    end func
+    +*func toStr(): []char
+        ret me.name
+    end func
+end class
+
+func void(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "void"
+    do type.defaultValue :: null
+    do type.size :: 0
+    ret type
+end func
+
+func i(size: int): @Type
+    var type: @Type :: #@Type
+    do type.name :: "i\{size}"
+    do type.defaultValue :: "0"
+    do type.size :: size
+    ret type
+end func
+
+func float_(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "float"
+    do type.defaultValue :: "0.0"
+    do type.size :: 32
+    ret type
+end func
+
+func double(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "double"
+    do type.defaultValue :: "0.0"
+    do type.size :: 64
+    ret type
+end func
+
+func ptr(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "ptr"
+    do type.defaultValue :: "0"
+    do type.size :: 64 {ほんとか？}
+    ret type
+end func
+
+func label(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "label"
+    ret type {しょうがないと思う}
+end func
+
+func typeToLlvmType(type: \wreck1@Type): @Type
+    switch(type)
+    case \wreck1@bool_()
+        ret @i(1)
+    case \wreck1@int8(), \wreck1@uint8()
+        ret @i(8)
+    case \wreck1@int16(), \wreck1@uint16()
+        ret @i(16)
+    case \wreck1@int32(), \wreck1@uint32()
+        ret @i(32)
+    case \wreck1@int64(), \wreck1@uint64()
+        ret @i(64)
+    case \wreck1@float32()
+        ret @float_()
+    case \wreck1@float64()
+        ret @double()
+    default
+        do \util@crash("Type \{type.name} can't be converted to LLVM type yet")
+        ret null
+    end switch
+end func

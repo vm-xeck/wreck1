@@ -1,0 +1,68 @@
++class ExprNode()
+    enum ExprKind
+        funcCall
+        varRef
+        constRef
+        op
+        literal
+    end enum
+
+    +var kind: ExprKind
+    +var value: []char {literal}
+    +var ref: @StmtNode {func-call | var-ref | const-ref}
+    +var op: @Op {operator}
+    +var type: @Type
+    +var args: []ExprNode
+    *func ctor()
+        do me.args :: #[0]ExprNode
+    end func
+    +func depth(): int
+        var d: int :: 0
+        for i(0, ^me.args)
+            do d :: lib@max(d, me.args[i].depth()+1)
+        end for
+        ret d
+    end func
+end class
+
++func makeFuncCallNode(ref: @StmtNode, args: []@ExprNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %funcCall
+    do node.type :: ref.type
+    do node.ref :: ref
+    do node.args :: args
+    ret node
+end func
+
++func makeVarRefNode(ref: @StmtNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %varRef
+    do node.type :: ref.type
+    do node.ref :: ref
+    ret node
+end func
+
++func makeConstRefNode(ref: @StmtNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %constRef
+    do node.type :: ref.type
+    do node.ref :: ref
+    ret node
+end func
+
++func makeOpNode(op: @Op, args: []@ExprNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %op
+    do node.op :: op
+    do node.type :: op.retType
+    do node.args :: args
+    ret node
+end func
+
++func makeLiteralNode(value: []char, type: @Type): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %literal
+    do node.value :: value
+    do node.type :: type
+    ret node
+end func

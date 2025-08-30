@@ -1,0 +1,86 @@
+func typeNameToType(typeName: []char): \wreck1@Type
+    switch(typeName)
+    case \wreck1@bool_().name
+        ret \wreck1@bool_()
+    case \wreck1@int8().name
+        ret \wreck1@int8()
+    case \wreck1@int16().name
+        ret \wreck1@int16()
+    case \wreck1@int32().name
+        ret \wreck1@int32()
+    case \wreck1@int64().name
+        ret \wreck1@int64()
+    case \wreck1@uint8().name
+        ret \wreck1@uint8()
+    case \wreck1@uint16().name
+        ret \wreck1@uint16()
+    case \wreck1@uint32().name
+        ret \wreck1@uint32()
+    case \wreck1@uint64().name
+        ret \wreck1@uint64()
+    case \wreck1@float32().name
+        ret \wreck1@float32()
+    case \wreck1@float64().name
+        ret \wreck1@float64()
+    end switch
+    if(typeName.sub(0, 2) = "[]")
+        var elemType: \wreck1@Type :: typeNameToType(typeName.sub(2, -1))
+        ret \wreck1@array(elemType)
+    end if
+    ; TODO: structを\wreck1@Type型にするには現在定義されているstructの一覧が必要。
+    do \util@crash("Invalid type name: \{typeName}")
+    ret null
+end func
+
+
+func literalToType(literal: []char): \wreck1@Type
+    if(literal="true" | literal="false")
+        ret \wreck1@bool_()
+    end if
+    if(\util@isNum(literal[0]))
+        ret @numLiteralToType(literal)
+    end if
+
+    ; not literal; ignore
+    ret null
+end func
+
+func numLiteralToType(literal: []char): \wreck1@Type
+    var sfx: []char :: ""
+    var i: int :: ^literal - 1
+    while(!\util@isNum(literal[i]) & literal[i]<>'.')
+        do sfx :: literal[i].toStr() ~ sfx
+        do i :- 1
+    end while
+    var dotCount: int :: ^literal.split(".") - 1
+    switch(dotCount)
+    case 0
+        switch(sfx)
+        case \wreck1@int8().sfx
+            ret \wreck1@int8()
+        case \wreck1@int16().sfx
+            ret \wreck1@int16()
+        case \wreck1@int32().sfx
+            ret \wreck1@int32()
+        case \wreck1@int64().sfx
+            ret \wreck1@int64()
+        case \wreck1@uint8().sfx
+            ret \wreck1@uint8()
+        case \wreck1@uint16().sfx
+            ret \wreck1@uint16()
+        case \wreck1@uint32().sfx
+            ret \wreck1@uint32()
+        case \wreck1@uint64().sfx
+            ret \wreck1@uint64()
+        end switch
+    case 1
+        switch(sfx)
+        case \wreck1@float32().sfx
+            ret \wreck1@float32()
+        case \wreck1@float64().sfx
+            ret \wreck1@float64()
+        end switch
+    end switch
+    do \util@crash("Couldn't type unknown num literal: \{literal}")
+    ret null
+end func

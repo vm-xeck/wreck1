@@ -1,0 +1,107 @@
+func ret_(type: @Type, value: []char): []char
+    if(type = @void())
+        ret "  ret \{type}\n"
+    else
+        ret "  ret \{type} \{value}\n"
+    end if
+end func
+
+func br(cond: []char, ifTrue: []char, ifFalse: []char): []char
+    ret "  br i1 \{cond}, label \{ifTrue}, label \{ifFalse}\n"
+end func
+
+func unconditionalBr(dest: []char): []char
+    ret "  br label \{dest}\n"
+end func
+
+func fneg(result: []char, ty: @Type, op1: []char): []char
+    ret "  \{result} = fneg \{ty} \{op1}\n"
+end func
+
+func add(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = add \{ty} \{op1}, \{op2}\n"
+end func
+
+func fadd(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fadd \{ty} \{op1}, \{op2}\n"
+end func
+
+func sub(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = sub \{ty} \{op1}, \{op2}\n"
+end func
+
+func fsub(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fsub \{ty} \{op1}, \{op2}\n"
+end func
+
+func mul(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = mul \{ty} \{op1}, \{op2}\n"
+end func
+
+func fmul(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fmul \{ty} \{op1}, \{op2}\n"
+end func
+
+func udiv(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = udiv \{ty} \{op1}, \{op2}\n"
+end func
+
+func sdiv(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = sdiv \{ty} \{op1}, \{op2}\n"
+end func
+
+func fdiv(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fdiv \{ty} \{op1}, \{op2}\n"
+end func
+
+func urem(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = urem \{ty} \{op1}, \{op2}\n"
+end func
+
+func srem(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = srem \{ty} \{op1}, \{op2}\n"
+end func
+
+func frem(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = frem \{ty} \{op1}, \{op2}\n"
+end func
+
+func and(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = and \{ty} \{op1}, \{op2}\n"
+end func
+
+func or(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = or \{ty} \{op1}, \{op2}\n"
+end func
+
+func xor(result: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = xor \{ty} \{op1}, \{op2}\n"
+end func
+
+func alloca(result: []char, type: @Type): []char
+    ret "  \{result} = alloca \{type}\n"
+end func
+
+func load(result: []char, ty: @Type, ptr: []char): []char
+    ret "  \{result} = load \{ty}, ptr \{ptr}\n"
+end func
+
+func store(ty: @Type, value: []char, ptr: []char): []char
+    ret "  store \{ty} \{value}, ptr \{ptr}\n"
+end func
+
+func icmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = icmp \{cond} \{ty} \{op1}, \{op2}\n"
+end func
+
+func fcmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []char
+    ret "  \{result} = fcmp \{cond} \{ty} \{op1}, \{op2}\n"
+end func
+
+func call(result: []char, ty: @Type, fnptrval: []char, args: []char): []char
+    if(ty = @void())
+        ret "  call \{ty} \{fnptrval}(\{args})\n"
+    else
+        ret "  \{result} = call \{ty} \{fnptrval}(\{args})\n"
+    end if
+end func

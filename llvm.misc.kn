@@ -1,0 +1,26 @@
+func nodeToLlvmName(node: \wreck1@StmtNode): []char
+    var path: [][]char :: #[0,0]char
+    while(node.kind <> %root)
+        var names: [][]char :: node.name.split(".")
+        do path :: [names[^names-1]] ~ path
+        {"%cool_func._if2._case0._while3.inner_cooler_func"->"inner_cooler_func"}
+        do node :: node.parent
+    end while
+    if(^path = 1) {global}
+        ret "@" ~ path.join(".")
+    else {local}
+        ret "%" ~ path.join(".").sub(1, -1)
+        {既に命名されたグローバル変数のpfx'@'が混入しており、これを'%'で置換する}
+    end if
+    {"%cool_func._if2._case0._while3.inner_cooler_func.hoge"みたいになる}
+end func
+
+
+func dropTypeSfx(value: []char, type: \wreck1@Type): []char
+    if(value.sub(^value-^type.sfx, -1) = type.sfx)
+        ret value.sub(0, ^value-^type.sfx)
+    else
+        do \util@crash("\{value} is supposed to have type \{type.name} but has different suffix")
+        ret null
+    end if
+end func
