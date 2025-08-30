@@ -5,8 +5,8 @@
 
 ## EBNF
 ```ebnf
-code = { func | var | const | struct | comment }; //TODO: asm, import
-stmt = var | const | while | if | return | do; //TODO: asm
+code = { func | var | const | struct | comment }; //TODO: import
+stmt = var | const | while | if | return | do; //TODO: func, struct
 func = "func", func-name, "(", [ arg, { ",", arg } ], ")", ":", type-name,
     "{", { stmt }, return, "}";
 var = "var", var-name, ":", type-name, [ "::", expr ];
@@ -34,7 +34,7 @@ type-name =
     "int", ("8" | "16" | "32" | "64")
     | "uint", ("8" | "16" | "32" | "64")
     | "float", ("32" | "64")
-    | "bool";
+    | "bool"; //TODO: char, struct-name, ary-name
 
 separator-sign = " " | "\t" | "\n" | comment;
 ```
