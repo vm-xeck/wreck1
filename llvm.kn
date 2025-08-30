@@ -59,7 +59,7 @@ func funcToLlvm(node: \wreck1@StmtNode): []char
     var llvm: []char :: ""
     var argAry: [][]char :: #[0,0]char
     for i(0, ^node.args-1)
-        do argAry :~ ["%\{node.args[i].name} \{@typeToLlvmType(node.args[i].type)}"]
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} %\{node.args[i].name}"]
     end for
     var args: []char :: argAry.join(", ")
     do llvm :~ "define \{@typeToLlvmType(node.type)} @\{node.name}(\{args}) {\n"
