@@ -22,6 +22,8 @@ end func
         ifCase
         return
         do_
+        builtinFunc
+        builtinConst
     end enum
 
     +var kind: StmtKind
@@ -30,6 +32,7 @@ end func
     +var args: []@FuncArg
     +var expr: @ExprNode
     +var stmts: list<StmtNode>
+    +var llvm: []char
     +var parent: @StmtNode
     *func ctor()
         do me.args :: #[0]@FuncArg
@@ -135,11 +138,32 @@ end func
     ret node
 end func
 
++func makeBuiltinFuncNode(name: []char, type: @Type, args: []@FuncArg, llvm: []char, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %builtinFunc
+    do node.name :: name
+    do node.type :: type
+    do node.args :: args
+    do node.llvm :: llvm
+    do node.parent :: parent
+    ret node
+end func
+
++func makeBuiltinConstNode(name: []char, type: @Type, llvm: []char, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %builtinConst
+    do node.name :: name
+    do node.type :: type
+    do node.llvm :: llvm
+    do node.parent :: parent
+    ret node
+end func
+
 +func findFunc(name: []char, parent: @StmtNode): @StmtNode
     do parent.stmts.tail()
     while(!parent.stmts.term())
         var stmt: @StmtNode :: parent.stmts.get()
-        if(stmt.kind=%func_ & stmt.name=name)
+        if((stmt.kind=%func_|stmt.kind=%builtinFunc) & stmt.name=name)
             ret stmt
         end if
         do parent.stmts.prev()
@@ -155,7 +179,7 @@ end func
     do parent.stmts.tail()
     while(!parent.stmts.term())
         var stmt: @StmtNode :: parent.stmts.get()
-        if((stmt.kind=%var_ | stmt.kind=%const_) & stmt.name=name)
+        if((stmt.kind=%var_|stmt.kind=%const_|stmt.kind=%builtinConst) & stmt.name=name)
             ret stmt
         end if
         do parent.stmts.prev()

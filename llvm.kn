@@ -18,6 +18,10 @@ include misc
             do cui@print(@varToLlvm(ast.stmts.get()))
         case %const_
             do cui@print(@constToLlvm(ast.stmts.get()))
+        case %builtinFunc
+            do cui@print(@builtinFuncToLlvm(ast.stmts.get()))
+        case %builtinConst
+            do cui@print(@builtinConstToLlvm(ast.stmts.get()))
         default
             do \util@crash("Couldn't LLVMize unknown stmt kind: \{ast.stmts.get().kind $ int}")
         end switch
@@ -49,6 +53,10 @@ func stmtToLlvm(node: \wreck1@StmtNode): []char
         ret @returnToLlvm(node)
     case %do_
         ret @doToLlvm(node)
+    case %builtinFunc
+        ret @builtinFuncToLlvm(node)
+    case %builtinConst
+        ret @builtinConstToLlvm(node)
     default
         do \util@crash("Invalid stmt kind: \{node.kind $ int}")
         ret ""
@@ -197,6 +205,16 @@ end func
 
 func doToLlvm(node: \wreck1@StmtNode): []char
     ret @exprToLlvm(node.expr)
+end func
+
+func builtinFuncToLlvm(node: \wreck1@StmtNode): []char
+    do node.name :: @nodeToLlvmName(node)
+    ret node.llvm
+end func
+
+func builtinConstToLlvm(node: \wreck1@StmtNode): []char
+    do node.name :: @nodeToLlvmName(node)
+    ret node.llvm
 end func
 
 
