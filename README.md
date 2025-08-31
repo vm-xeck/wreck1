@@ -3,6 +3,8 @@
 
 構造体と配列に対応したい気持ちもある
 
+以降の開発は`SocialSide9130/wreck1`に移動しました
+
 ## EBNF
 ```ebnf
 code = { func | var | const | struct | comment }; //TODO: import
