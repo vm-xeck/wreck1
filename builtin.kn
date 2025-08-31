@@ -1,13 +1,37 @@
+include cast
+
+
 +func addBuiltins(root: \wreck1@StmtNode)
     do root.stmts.add(@int8_to_uint8(root))
-end func
-
-func int8_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
-    ret \wreck1@makeBuiltinFuncNode(
-        |"int8_to_uint8",
-        |\wreck1@uint8(),
-        |[\wreck1@makeFuncArg("%1", \wreck1@int8())],
-        |"define i8 @int8_to_uint8(i8 %1) {\n  ret i8 %1\n}\n",{型とか直書きじゃなくて\wreck1@int8().nameにしたくない？}
-        |parent
-    |)
+    do root.stmts.add(@uint8_to_int8(root))
+    do root.stmts.add(@int16_to_uint16(root))
+    do root.stmts.add(@uint16_to_int16(root))
+    do root.stmts.add(@int32_to_uint32(root))
+    do root.stmts.add(@uint32_to_int32(root))
+    do root.stmts.add(@int64_to_uint64(root))
+    do root.stmts.add(@uint64_to_int64(root))
+    do root.stmts.add(@int8_to_int16(root))
+    do root.stmts.add(@int8_to_int32(root))
+    do root.stmts.add(@int8_to_int64(root))
+    do root.stmts.add(@int16_to_int8(root))
+    do root.stmts.add(@int16_to_int32(root))
+    do root.stmts.add(@int16_to_int64(root))
+    do root.stmts.add(@int32_to_int8(root))
+    do root.stmts.add(@int32_to_int16(root))
+    do root.stmts.add(@int32_to_int64(root))
+    do root.stmts.add(@int64_to_int8(root))
+    do root.stmts.add(@int64_to_int16(root))
+    do root.stmts.add(@int64_to_int32(root))
+    do root.stmts.add(@uint8_to_uint16(root))
+    do root.stmts.add(@uint8_to_uint32(root))
+    do root.stmts.add(@uint8_to_uint64(root))
+    do root.stmts.add(@uint16_to_uint8(root))
+    do root.stmts.add(@uint16_to_uint32(root))
+    do root.stmts.add(@uint16_to_uint64(root))
+    do root.stmts.add(@uint32_to_uint8(root))
+    do root.stmts.add(@uint32_to_uint16(root))
+    do root.stmts.add(@uint32_to_uint64(root))
+    do root.stmts.add(@uint64_to_uint8(root))
+    do root.stmts.add(@uint64_to_uint16(root))
+    do root.stmts.add(@uint64_to_uint32(root))
 end func
