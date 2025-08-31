@@ -34,4 +34,12 @@ include cast
     do root.stmts.add(@uint64_to_uint8(root))
     do root.stmts.add(@uint64_to_uint16(root))
     do root.stmts.add(@uint64_to_uint32(root))
+    do root.stmts.add(@int32_to_float32(root))
+    do root.stmts.add(@uint32_to_float32(root))
+    do root.stmts.add(@int64_to_float64(root))
+    do root.stmts.add(@uint64_to_float64(root))
+    do root.stmts.add(@float32_to_int32(root))
+    do root.stmts.add(@float32_to_uint32(root))
+    do root.stmts.add(@float64_to_int64(root))
+    do root.stmts.add(@float64_to_uint64(root))
 end func
