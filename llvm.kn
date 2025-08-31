@@ -208,13 +208,22 @@ func doToLlvm(node: \wreck1@StmtNode): []char
 end func
 
 func builtinFuncToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: ""
     do node.name :: @nodeToLlvmName(node)
-    ret node.llvm
+    var argAry: [][]char :: #[0,0]char
+    for i(0, ^node.args-1)
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} \{node.args[i].name}"]
+    end for
+    var args: []char :: argAry.join(", ")
+    do llvm :~ "define \{@typeToLlvmType(node.type)} \{node.name}(\{args}) {\n"
+    do llvm :~ node.llvm
+    do llvm :~ "}\n"
+    ret llvm
 end func
 
 func builtinConstToLlvm(node: \wreck1@StmtNode): []char
     do node.name :: @nodeToLlvmName(node)
-    ret node.llvm
+    ret "\{node.name} = global \{@typeToLlvmType(node.type)} \{node.llvm}\n"
 end func
 
 
