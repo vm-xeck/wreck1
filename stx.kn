@@ -3,6 +3,7 @@ include token
 
 +func parse(tokens: list<[]char>): \wreck1@StmtNode
     var root: \wreck1@StmtNode :: \wreck1@makeRootNode()
+    do \builtin@addBuiltins(root)
     do tokens.head()
     while(!tokens.term())
         do @addStmt(tokens, root) {TODO: structもここでパースしたさがある<-これはなに}

@@ -18,6 +18,10 @@ include misc
             do cui@print(@varToLlvm(ast.stmts.get()))
         case %const_
             do cui@print(@constToLlvm(ast.stmts.get()))
+        case %builtinFunc
+            do cui@print(@builtinFuncToLlvm(ast.stmts.get()))
+        case %builtinConst
+            do cui@print(@builtinConstToLlvm(ast.stmts.get()))
         default
             do \util@crash("Couldn't LLVMize unknown stmt kind: \{ast.stmts.get().kind $ int}")
         end switch
@@ -49,6 +53,10 @@ func stmtToLlvm(node: \wreck1@StmtNode): []char
         ret @returnToLlvm(node)
     case %do_
         ret @doToLlvm(node)
+    case %builtinFunc
+        ret @builtinFuncToLlvm(node)
+    case %builtinConst
+        ret @builtinConstToLlvm(node)
     default
         do \util@crash("Invalid stmt kind: \{node.kind $ int}")
         ret ""
@@ -59,7 +67,7 @@ func funcToLlvm(node: \wreck1@StmtNode): []char
     var llvm: []char :: ""
     var argAry: [][]char :: #[0,0]char
     for i(0, ^node.args-1)
-        do argAry :~ ["%\{node.args[i].name} \{@typeToLlvmType(node.args[i].type)}"]
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} %\{node.args[i].name}"]
     end for
     var args: []char :: argAry.join(", ")
     do llvm :~ "define \{@typeToLlvmType(node.type)} @\{node.name}(\{args}) {\n"
@@ -197,6 +205,25 @@ end func
 
 func doToLlvm(node: \wreck1@StmtNode): []char
     ret @exprToLlvm(node.expr)
+end func
+
+func builtinFuncToLlvm(node: \wreck1@StmtNode): []char
+    var llvm: []char :: ""
+    do node.name :: @nodeToLlvmName(node)
+    var argAry: [][]char :: #[0,0]char
+    for i(0, ^node.args-1)
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} \{node.args[i].name}"]
+    end for
+    var args: []char :: argAry.join(", ")
+    do llvm :~ "define \{@typeToLlvmType(node.type)} \{node.name}(\{args}) {\n"
+    do llvm :~ node.llvm
+    do llvm :~ "}\n"
+    ret llvm
+end func
+
+func builtinConstToLlvm(node: \wreck1@StmtNode): []char
+    do node.name :: @nodeToLlvmName(node)
+    ret "\{node.name} = global \{@typeToLlvmType(node.type)} \{node.llvm}\n"
 end func
 
 

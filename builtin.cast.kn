@@ -1,0 +1,399 @@
+func int8_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int8_to_uint8",
+        |\wreck1@uint8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int8())],
+        |"  ret i8 %1\n",{型とか直書きじゃなくて\wreck1@int8().nameにしたくない？}
+        |parent
+    |)
+end func
+
+func uint8_to_int8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint8_to_int8",
+        |\wreck1@int8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint8())],
+        |"  ret i8 %1\n",
+        |parent
+    |)
+end func
+
+func int16_to_uint16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int16_to_uint16",
+        |\wreck1@uint16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int16())],
+        |"  ret i16 %1\n",
+        |parent
+    |)
+end func
+
+func uint16_to_int16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint16_to_int16",
+        |\wreck1@int16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint16())],
+        |"  ret i16 %1\n",
+        |parent
+    |)
+end func
+
+func int32_to_uint32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int32_to_uint32",
+        |\wreck1@uint32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int32())],
+        |"  ret i32 %1\n",
+        |parent
+    |)
+end func
+
+func uint32_to_int32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint32_to_int32",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint32())],
+        |"  ret i32 %1\n",
+        |parent
+    |)
+end func
+
+func int64_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int64_to_uint64",
+        |\wreck1@uint64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |"  ret i64 %1\n",
+        |parent
+    |)
+end func
+
+func uint64_to_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint64_to_int64",
+        |\wreck1@int64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |"  ret i64 %1\n",
+        |parent
+    |)
+end func
+
+func int8_to_int16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int8_to_int16",
+        |\wreck1@int16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int8())],
+        |"  %3 = sext i8 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func int8_to_int32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int8_to_int32",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int8())],
+        |"  %3 = sext i8 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func int8_to_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int8_to_int64",
+        |\wreck1@int64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int8())],
+        |"  %3 = sext i8 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func int16_to_int8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int16_to_int8",
+        |\wreck1@int8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int16())],
+        |"  %3 = trunc i16 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func int16_to_int32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int16_to_int32",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int16())],
+        |"  %3 = sext i16 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func int16_to_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int16_to_int64",
+        |\wreck1@int64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int16())],
+        |"  %3 = sext i16 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func int32_to_int8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int32_to_int8",
+        |\wreck1@int8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int32())],
+        |"  %3 = trunc i32 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func int32_to_int16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int32_to_int16",
+        |\wreck1@int16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int32())],
+        |"  %3 = trunc i32 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func int32_to_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int32_to_int64",
+        |\wreck1@int64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int32())],
+        |"  %3 = sext i32 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func int64_to_int8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int64_to_int8",
+        |\wreck1@int8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |"  %3 = trunc i64 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func int64_to_int16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int64_to_int16",
+        |\wreck1@int16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |"  %3 = trunc i64 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func int64_to_int32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int64_to_int32",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |"  %3 = trunc i64 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func uint8_to_uint16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint8_to_uint16",
+        |\wreck1@uint16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint8())],
+        |"  %3 = zext i8 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func uint8_to_uint32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint8_to_uint32",
+        |\wreck1@uint32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint8())],
+        |"  %3 = zext i8 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func uint8_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint8_to_uint64",
+        |\wreck1@uint64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint8())],
+        |"  %3 = zext i8 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func uint16_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint16_to_uint8",
+        |\wreck1@uint8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint16())],
+        |"  %3 = trunc i16 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func uint16_to_uint32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint16_to_uint32",
+        |\wreck1@uint32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint16())],
+        |"  %3 = zext i16 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func uint16_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint16_to_uint64",
+        |\wreck1@uint64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint16())],
+        |"  %3 = zext i16 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func uint32_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint32_to_uint8",
+        |\wreck1@uint8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint32())],
+        |"  %3 = trunc i32 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func uint32_to_uint16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint32_to_uint16",
+        |\wreck1@uint16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint32())],
+        |"  %3 = trunc i32 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func uint32_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint32_to_uint64",
+        |\wreck1@uint64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint32())],
+        |"  %3 = zext i32 %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func uint64_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint64_to_uint8",
+        |\wreck1@uint8(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |"  %3 = trunc i64 %1 to i8\n  ret i8 %3\n",
+        |parent
+    |)
+end func
+
+func uint64_to_uint16(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint64_to_uint16",
+        |\wreck1@uint16(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |"  %3 = trunc i64 %1 to i16\n  ret i16 %3\n",
+        |parent
+    |)
+end func
+
+func uint64_to_uint32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint64_to_uint32",
+        |\wreck1@uint32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |"  %3 = trunc i64 %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func int32_to_float32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int32_to_float32",
+        |\wreck1@float32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int32())],
+        |"  %3 = sitofp i32 %1 to float\n  ret float %3\n",
+        |parent
+    |)
+end func
+
+func uint32_to_float32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint32_to_float32",
+        |\wreck1@float32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint32())],
+        |"  %3 = uitofp i32 %1 to float\n  ret float %3\n",
+        |parent
+    |)
+end func
+
+func int64_to_float64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"int64_to_float64",
+        |\wreck1@float64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |"  %3 = sitofp i64 %1 to double\n  ret double %3\n",
+        |parent
+    |)
+end func
+
+func uint64_to_float64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint64_to_float64",
+        |\wreck1@float64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |"  %3 = uitofp i64 %1 to double\n  ret double %3\n",
+        |parent
+    |)
+end func
+
+func float32_to_int32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"float32_to_int32",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@float32())],
+        |"  %3 = fptosi float %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func float32_to_uint32(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"float32_to_uint32",
+        |\wreck1@uint32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@float32())],
+        |"  %3 = fptoui float %1 to i32\n  ret i32 %3\n",
+        |parent
+    |)
+end func
+
+func float64_to_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"float64_to_int64",
+        |\wreck1@int64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@float64())],
+        |"  %3 = fptosi double %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
+
+func float64_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"float64_to_uint64",
+        |\wreck1@uint64(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@float64())],
+        |"  %3 = fptoui double %1 to i64\n  ret i64 %3\n",
+        |parent
+    |)
+end func
