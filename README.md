@@ -5,6 +5,8 @@
 
 以降の開発は`SocialSide9130/wreck1`に移動しました
 
+ここは新機能を実験する場所にしようかな、など…
+
 ## EBNF
 ```ebnf
 code = { func | var | const | struct | comment }; //TODO: import
