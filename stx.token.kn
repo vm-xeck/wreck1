@@ -22,6 +22,8 @@ func typeNameToType(typeName: []char): \wreck1@Type
         ret \wreck1@float32()
     case \wreck1@float64().name
         ret \wreck1@float64()
+    case \wreck1@char_().name
+        ret \wreck1@char_()
     end switch
     if(typeName.sub(0, 2) = "[]")
         var elemType: \wreck1@Type :: typeNameToType(typeName.sub(2, -1))
@@ -36,6 +38,15 @@ end func
 func literalToType(literal: []char): \wreck1@Type
     if(literal="true" | literal="false")
         ret \wreck1@bool_()
+    end if
+    if(literal[0]='\'' & literal[^literal-1]='\'')
+        if(^literal<3 | 4<^literal) {invalid}
+            ret null
+        end if
+        if(^literal=4 & literal[1]<>'\\') {also invalid}
+            ret null
+        end if
+        ret \wreck1@char_()
     end if
     if(\util@isNum(literal[0]))
         ret @numLiteralToType(literal)

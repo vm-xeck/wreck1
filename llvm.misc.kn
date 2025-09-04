@@ -15,7 +15,6 @@ func nodeToLlvmName(node: \wreck1@StmtNode): []char
     {"%cool_func._if2._case0._while3.inner_cooler_func.hoge"みたいになる}
 end func
 
-
 func dropTypeSfx(value: []char, type: \wreck1@Type): []char
     if(value.sub(^value-^type.sfx, -1) = type.sfx)
         ret value.sub(0, ^value-^type.sfx)
@@ -23,4 +22,22 @@ func dropTypeSfx(value: []char, type: \wreck1@Type): []char
         do \util@crash("\{value} is supposed to have type \{type.name} but has different suffix")
         ret null
     end if
+end func
+
+func escapedCharToLlvmChar(escapedChar: []char): []char
+    switch(escapedChar)
+    case "\\\\"
+        ret "\\\\"
+    case "\\\""{"}
+        ret "\\22"
+    case "\\'"
+        ret "\\27"
+    case "\\0"
+        ret "\\00"
+    case "\\n"
+        ret "\\0A"
+    default
+        do \util@crash("Unknown escape sequence \{escapedChar} has no LLVM equivalent")
+        ret null
+    end switch
 end func

@@ -106,6 +106,14 @@ end func
     ret type
 end func
 
++func char_(): @Type
+    var type: @Type :: #@Type
+    do type.name :: "char"
+    do type.defaultValue :: "'\\0'"
+    do type.sfx :: ""
+    ret type
+end func
+
 +func array(elemType: @Type): @Type
     var type: @Type :: #@Type
     do type.name :: "[]\{elemType.name}"
