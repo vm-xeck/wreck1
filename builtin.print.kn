@@ -38,6 +38,16 @@ func print_bool(parent: \wreck1@StmtNode): \wreck1@StmtNode
     |)
 end func
 
+func print_char(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"print_char",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArg("%1", \wreck1@char_())],
+        |"  %3 = alloca [3 x i8]\n  store [3 x i8] c\"%c\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3, i8 %1)\n  ret i32 %4\n",
+        |parent
+    |)
+end func
+
 func print_newline(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_newline",

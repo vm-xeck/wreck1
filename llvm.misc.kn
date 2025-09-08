@@ -24,11 +24,21 @@ func dropTypeSfx(value: []char, type: \wreck1@Type): []char
     end if
 end func
 
+func charLiteralToLlvmLiteral(literal: []char): []char
+    switch(^literal)
+    case 3
+        ret "\{literal[1] $ int}"
+    case 4
+        ret "\{literal[2] $ int}"
+    end switch
+    ret null
+end func
+
 func escapedCharToLlvmChar(escapedChar: []char): []char
     switch(escapedChar)
     case "\\\\"
         ret "\\\\"
-    case "\\\""{"}
+    case "\\\""
         ret "\\22"
     case "\\'"
         ret "\\27"
