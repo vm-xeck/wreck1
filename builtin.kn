@@ -47,5 +47,6 @@ include print
     do root.stmts.add(@print_uint64(root))
     do root.stmts.add(@print_float64(root))
     do root.stmts.add(@print_bool(root))
+    do root.stmts.add(@print_char(root))
     do root.stmts.add(@print_newline(root))
 end func

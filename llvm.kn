@@ -66,15 +66,16 @@ end func
 func funcToLlvm(node: \wreck1@StmtNode): []char
     var llvm: []char :: ""
     var argAry: [][]char :: #[0,0]char
+    do node.name :: "@" ~ node.name {LLVMの関数は常にトップレベル}
     for i(0, ^node.args-1)
-        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} %\{node.args[i].name}"]
+        do node.args[i].name :: @nodeToLlvmName(node.args[i])
+        do argAry :~ ["\{@typeToLlvmType(node.args[i].type)} \{node.args[i].name}"]
     end for
     var args: []char :: argAry.join(", ")
-    do llvm :~ "define \{@typeToLlvmType(node.type)} @\{node.name}(\{args}) {\n"
-    if(node.name = "main")
+    do llvm :~ "define \{@typeToLlvmType(node.type)} \{node.name}(\{args}) {\n"
+    if(node.name = "@main")
         do llvm :~ @call("", @void(), "@_", "")
     end if
-    do node.name :: "@" ~ node.name {LLVMの関数は常にトップレベル}
 
     do node.stmts.head()
     while(!node.stmts.term())
@@ -233,6 +234,8 @@ func exprToLlvm(node: \wreck1@ExprNode): []char
         ret @callToLlvm(node)
     case %varRef, %constRef
         ret @refToLlvm(node)
+    case %funcArgRef
+        ret @funcArgRefToLlvm(node)
     case %op
         ret @opToLlvm(node)
     case %literal
@@ -362,6 +365,21 @@ end func
 func refToLlvm(node: \wreck1@ExprNode): []char
     do @unnamedLocal :+ 1
     ret @load("%\{@unnamedLocal}", @typeToLlvmType(node.type), node.ref.name)
+end func
+
+func funcArgRefToLlvm(node: \wreck1@ExprNode): []char
+    var type: @Type :: @typeToLlvmType(node.type)
+    switch(node.type)
+    case \wreck1@bool_(), \wreck1@int8(), \wreck1@int16(), \wreck1@int32(), \wreck1@int64(), \wreck1@uint8(), \wreck1@uint16(), \wreck1@uint32(), \wreck1@uint64(), \wreck1@char_()
+        do @unnamedLocal :+ 1
+        ret @add("%\{@unnamedLocal}", type, node.ref.name, type.defaultValue)
+    case \wreck1@float32(), \wreck1@float64()
+        do @unnamedLocal :+ 1
+        ret @fadd("%\{@unnamedLocal}", type, node.ref.name, type.defaultValue)
+    default
+        do \util@crash("Args of type \{type} are not yet supported by LLVMizer")
+        ret null
+    end switch
 end func
 
 func literalToLlvm(node: \wreck1@ExprNode): []char

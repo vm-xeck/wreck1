@@ -45,7 +45,7 @@ end func
 func parseFunc(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
     var name: []char
     var type: \wreck1@Type
-    var args: []\wreck1@FuncArg :: #[0]\wreck1@FuncArg
+    var args: []\wreck1@StmtNode :: #[0]\wreck1@StmtNode
     var stmts: list<\wreck1@StmtNode> :: #list<\wreck1@StmtNode>
     
     do \util@expect(tokens.get(), "func")
@@ -60,7 +60,7 @@ func parseFunc(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
         do \util@expect(tokens.get(), ":")
         do tokens.next()
         var argType: \wreck1@Type :: @typeNameToType(tokens.get())
-        do args :~ [\wreck1@makeFuncArg(argName, argType)]
+        do args :~ [\wreck1@makeFuncArgNode(argName, argType, null)]
         do tokens.next()
         if(tokens.get() = ",")
             do tokens.next()
@@ -78,6 +78,9 @@ func parseFunc(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@StmtNode
     do tokens.next()
 
     var node: \wreck1@StmtNode :: \wreck1@makeFuncNode(name, type, args, stmts, parent)
+    for i(0, ^args-1)
+        do args[i].parent :: node
+    end for
     while(!tokens.term() & tokens.get()<>"}")
         do @addStmt(tokens, node)
     end while
@@ -443,6 +446,10 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
                 do node :: \wreck1@makeVarRefNode(target)
             case %const_
                 do node :: \wreck1@makeConstRefNode(target)
+            case %funcArg
+                do node :: \wreck1@makeFuncArgRefNode(target)
+            default
+                do \util@crash("\{target.name} has stmt kind that's not supported yet")
             end switch
         end if
     else
