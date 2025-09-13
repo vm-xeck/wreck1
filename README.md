@@ -38,7 +38,8 @@ type-name =
     "int", ("8" | "16" | "32" | "64")
     | "uint", ("8" | "16" | "32" | "64")
     | "float", ("32" | "64")
-    | "bool"; //TODO: char, struct-name, ary-name
+    | "bool"
+    | "char" ; //TODO: struct-name, ary-name
 
 separator-sign = " " | "\t" | "\n" | comment;
 ```
