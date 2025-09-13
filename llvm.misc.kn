@@ -29,13 +29,26 @@ func charLiteralToLlvmLiteral(literal: []char): []char
     case 3
         ret "\{literal[1] $ int}"
     case 4
-        ret "\{literal[2] $ int}"
+        switch(literal[2])
+        case '\\'
+            ret "92"
+        case '\"'
+            ret "34"
+        case '\''
+            ret "39"
+        case '0'
+            ret "0"
+        case 'n'
+            ret "10"
+        default
+            do \util@crash("Unknown excape sequence \{literal} has no LLVM equivalent")
+        end switch
     end switch
     ret null
 end func
 
-func escapedCharToLlvmChar(escapedChar: []char): []char
-    switch(escapedChar)
+func escapeSequenceToLlvmChar(escapeSequence: []char): []char
+    switch(escapeSequence)
     case "\\\\"
         ret "\\\\"
     case "\\\""
@@ -47,7 +60,7 @@ func escapedCharToLlvmChar(escapedChar: []char): []char
     case "\\n"
         ret "\\0A"
     default
-        do \util@crash("Unknown escape sequence \{escapedChar} has no LLVM equivalent")
+        do \util@crash("Unknown escape sequence \{escapeSequence} has no LLVM equivalent")
         ret null
     end switch
 end func

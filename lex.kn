@@ -90,14 +90,13 @@ end enum
                 do i :- 1
             end switch
         case %charLiteral
-            switch c(code[i])
-            case '\''
-                do tokens.add(buf ~ [c])
+            if(code[i]='\'' & (buf[^buf-1]<>'\\'|buf[^buf-2]='\\'))
+                do tokens.add(buf ~ [code[i]])
                 do buf :: ""
                 do tokenKind :: %init
-            default
-                do buf :~ c.toStr()
-            end switch
+            else
+                do buf :~ [code[i]]
+            end if
         case %strLiteral
             do buf :~ code[i].toStr()
             if(buf[^buf-1]='\"' & buf[^buf-2]<>'\\')
