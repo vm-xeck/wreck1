@@ -2,7 +2,7 @@ func print_int64(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_int64",
         |\wreck1@int32(),
-        |[\wreck1@makeFuncArg("%1", \wreck1@int64())],
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@int64(), parent)],
         |"  %3 = alloca [3 x i8]\n  store[3 x i8] c\"%d\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3, i64 %1)\n  ret i32 %4\n}declare i32 @printf(ptr, ...);",
         |parent
     |)
@@ -12,7 +12,7 @@ func print_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_uint64",
         |\wreck1@int32(),
-        |[\wreck1@makeFuncArg("%1", \wreck1@uint64())],
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@uint64(), parent)],
         |"  %3 = alloca [3 x i8]\n  store[3 x i8] c\"%u\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3, i64 %1)\n  ret i32 %4\n",
         |parent
     |)
@@ -22,7 +22,7 @@ func print_float64(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_float64",
         |\wreck1@int32(),
-        |[\wreck1@makeFuncArg("%1", \wreck1@float64())],
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@float64(), parent)],
         |"  %3 = alloca [3 x i8]\n  store[3 x i8] c\"%f\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3, double %1)\n  ret i32 %4\n",
         |parent
     |)
@@ -32,8 +32,18 @@ func print_bool(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_bool",
         |\wreck1@int32(),
-        |[\wreck1@makeFuncArg("%1", \wreck1@bool_())],
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@bool_(), parent)],
         |"  br i1 %1, label %print_true, label %print_false\nprint_true:\n  %true = alloca [5 x i8]\n  store [5 x i8] c\"true\\00\", ptr %true\n  %3 = call i32 (ptr, ...) @printf(ptr %true)\n  ret i32 %3\nprint_false:\n  %false = alloca [6 x i8]\n  store [6 x i8] c\"false\\00\", ptr %false\n  %4 = call i32 (ptr, ...) @printf(ptr %false)\n  ret i32 %4\n",
+        |parent
+    |)
+end func
+
+func print_char(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"print_char",
+        |\wreck1@int32(),
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@char_(), parent)],
+        |"  %3 = alloca [3 x i8]\n  store [3 x i8] c\"%c\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3, i8 %1)\n  ret i32 %4\n",
         |parent
     |)
 end func
@@ -42,7 +52,7 @@ func print_newline(parent: \wreck1@StmtNode): \wreck1@StmtNode
     ret \wreck1@makeBuiltinFuncNode(
         |"print_newline",
         |\wreck1@int32(),
-        |#[0]\wreck1@FuncArg,
+        |#[0]\wreck1@StmtNode,
         |"  %3 = alloca [2 x i8]\n  store[2 x i8] c\"\\0A\\00\", ptr %3\n  %4 = call i32 (ptr, ...) @printf(ptr %3)\n  ret i32 %4\n",
         |parent
     |)

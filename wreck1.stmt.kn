@@ -1,20 +1,9 @@
-+class FuncArg()
-    +var name: []char
-    +var type: @Type
-end class
-
-+func makeFuncArg(name: []char, type: @Type): @FuncArg
-    var funcArg: @FuncArg :: #@FuncArg
-    do funcArg.name :: name
-    do funcArg.type :: type
-    ret funcArg
-end func
-
 +class StmtNode()
     enum StmtKind
         root
 
         func_
+        funcArg
         var_
         const_
         while_
@@ -29,13 +18,13 @@ end func
     +var kind: StmtKind
     +var name: []char
     +var type: @Type
-    +var args: []@FuncArg
+    +var args: []@StmtNode
     +var expr: @ExprNode
     +var stmts: list<StmtNode>
     +var llvm: []char
     +var parent: @StmtNode
     *func ctor()
-        do me.args :: #[0]@FuncArg
+        do me.args :: #[0]@StmtNode
         do me.stmts :: #list<StmtNode>
     end func
 end class
@@ -46,13 +35,22 @@ end class
     ret node
 end func
 
-+func makeFuncNode(name: []char, type: @Type, args: []@FuncArg, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
++func makeFuncNode(name: []char, type: @Type, args: []@StmtNode, stmts: list<@StmtNode>, parent: @StmtNode): @StmtNode
     var node: @StmtNode :: #@StmtNode
     do node.kind :: %func_
     do node.name :: name
     do node.type :: type
     do node.args :: args
     do node.stmts :: stmts
+    do node.parent :: parent
+    ret node
+end func
+
++func makeFuncArgNode(name: []char, type: @Type, parent: @StmtNode): @StmtNode
+    var node: @StmtNode :: #@StmtNode
+    do node.kind :: %funcArg
+    do node.name :: name
+    do node.type :: type
     do node.parent :: parent
     ret node
 end func
@@ -138,7 +136,7 @@ end func
     ret node
 end func
 
-+func makeBuiltinFuncNode(name: []char, type: @Type, args: []@FuncArg, llvm: []char, parent: @StmtNode): @StmtNode
++func makeBuiltinFuncNode(name: []char, type: @Type, args: []@StmtNode, llvm: []char, parent: @StmtNode): @StmtNode
     var node: @StmtNode :: #@StmtNode
     do node.kind :: %builtinFunc
     do node.name :: name
@@ -187,8 +185,7 @@ end func
     if(parent.kind = %func_)
         for i(0, ^parent.args-1)
             if(parent.args[i].name = name)
-                var arg: @FuncArg :: parent.args[i]
-                ret @makeVarNode(arg.name, arg.type, null, parent)
+                ret parent.args[i]
             end if
         end for
     end if

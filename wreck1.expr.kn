@@ -3,13 +3,14 @@
         funcCall
         varRef
         constRef
+        funcArgRef
         op
         literal
     end enum
 
     +var kind: ExprKind
     +var value: []char {literal}
-    +var ref: @StmtNode {func-call | var-ref | const-ref}
+    +var ref: @StmtNode {func-call | var-ref | const-ref | funcarg-ref}
     +var op: @Op {operator}
     +var type: @Type
     +var args: []ExprNode
@@ -45,6 +46,14 @@ end func
 +func makeConstRefNode(ref: @StmtNode): @ExprNode
     var node: @ExprNode :: #@ExprNode
     do node.kind :: %constRef
+    do node.type :: ref.type
+    do node.ref :: ref
+    ret node
+end func
+
++func makeFuncArgRefNode(ref: @StmtNode): @ExprNode
+    var node: @ExprNode :: #@ExprNode
+    do node.kind :: %funcArgRef
     do node.type :: ref.type
     do node.ref :: ref
     ret node

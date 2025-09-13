@@ -22,6 +22,8 @@ func typeNameToType(typeName: []char): \wreck1@Type
         ret \wreck1@float32()
     case \wreck1@float64().name
         ret \wreck1@float64()
+    case \wreck1@char_().name
+        ret \wreck1@char_()
     end switch
     if(typeName.sub(0, 2) = "[]")
         var elemType: \wreck1@Type :: typeNameToType(typeName.sub(2, -1))
@@ -36,6 +38,13 @@ end func
 func literalToType(literal: []char): \wreck1@Type
     if(literal="true" | literal="false")
         ret \wreck1@bool_()
+    end if
+    if(literal[0]='\'' & literal[^literal-1]='\'')
+        if(^literal=3 & @lenUtf8(literal[1])=1)
+            ret \wreck1@char_()
+        elif(^literal=4 & literal[1]='\\' & @lenUtf8(literal[2])=1)
+            ret \wreck1@char_()
+        end if
     end if
     if(\util@isNum(literal[0]))
         ret @numLiteralToType(literal)
@@ -83,4 +92,20 @@ func numLiteralToType(literal: []char): \wreck1@Type
     end switch
     do \util@crash("Couldn't type unknown num literal: \{literal}")
     ret null
+end func
+
+func lenUtf8(c: char): int
+    var utf16: bit16 :: c $ bit16
+    if(utf16.and(0xFC00b16) = 0xD800b16) {HSG}
+        ret 4
+    elif(utf16.and(0xFC00b16) = 0xDC00b16) {LSG}
+        ret 0
+    end if
+    if(utf16.and(0xF800b16) <> 0b16)
+        ret 3
+    elif(utf16.and(0xFF80b16) <> 0b16)
+        ret 2
+    else
+        ret 1
+    end if
 end func
