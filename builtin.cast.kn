@@ -397,3 +397,23 @@ func float64_to_uint64(parent: \wreck1@StmtNode): \wreck1@StmtNode
         |parent
     |)
 end func
+
+func uint8_to_char(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"uint8_to_char",
+        |\wreck1@char_(),
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@uint8(), parent)],
+        |"  ret i8 %1\n",
+        |parent
+    |)
+end func
+
+func char_to_uint8(parent: \wreck1@StmtNode): \wreck1@StmtNode
+    ret \wreck1@makeBuiltinFuncNode(
+        |"char_to_uint8",
+        |\wreck1@uint8(),
+        |[\wreck1@makeFuncArgNode("%1", \wreck1@char_(), parent)],
+        |"  ret i8 %1\n",
+        |parent
+    |)
+end func
