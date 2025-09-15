@@ -434,6 +434,16 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
             if(\util@isNull(target))
                 do \util@crash("No such function found: \{name}")
             end if
+
+            if(^args <> ^target.args)
+                do \util@crash("Called function \{target.name} but arg is wrong")
+            end if
+            for i(0, ^target.args-1)
+                if(args[i].type <> target.args[i].type)
+                    do \util@crash("Called function \{target.name} but arg is wrong")
+                end if
+            end for
+
             do node :: \wreck1@makeFuncCallNode(target, args)
             do tokens.next()
         else {var-ref | const-ref}
