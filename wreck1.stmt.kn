@@ -166,6 +166,9 @@ end func
         end if
         do parent.stmts.prev()
     end while
+    if(parent.kind=%func_ & parent.name=name)
+        ret parent {再帰関数のため。本当は\stx@parseHoge系を全部書き換えるべきかも}
+    end if
     if(parent.kind = %root)
         ret null
     else
