@@ -30,13 +30,15 @@ end enum
             case '\"'
                 do tokenKind :: %strLiteral
                 do buf :: c.toStr()
+            case '[', ']' {arrays}
+                do tokens.add(c.toStr())
             case '#'
                 do tokenKind :: %comment
             case ' ', '\t', '\n'
             case '(', ')', '{', '}', ',' {ktp.}
                 do tokens.add(c.toStr())
                 do buf :: ""
-            case ':', '|', '&', '=', '<', '>', '+', '-', '*', '/', '%', '!'
+            case ':', '|', '&', '=', '<', '>', '+', '-', '*', '/', '%', '!', '~', '^'
                 do tokenKind :: %op
                 do buf :: c.toStr()
             default {謎}
@@ -99,7 +101,7 @@ end enum
             end if
         case %strLiteral
             do buf :~ code[i].toStr()
-            if(buf[^buf-1]='\"' & buf[^buf-2]<>'\\')
+            if(buf[^buf-1]='\"' & (buf[^buf-2]<>'\\'|buf[^buf-3]='\\'))
                 do tokens.add(buf)
                 do buf :: ""
                 do tokenKind :: %init

@@ -25,7 +25,7 @@ func typeNameToType(typeName: []char): \wreck1@Type
     case \wreck1@char_().name
         ret \wreck1@char_()
     end switch
-    if(typeName.sub(0, 2) = "[]")
+    if(^typeName>=2 & typeName.sub(0, 2)="[]")
         var elemType: \wreck1@Type :: typeNameToType(typeName.sub(2, -1))
         ret \wreck1@array(elemType)
     end if
@@ -49,6 +49,10 @@ func literalToType(literal: []char): \wreck1@Type
     if(\util@isNum(literal[0]))
         ret @numLiteralToType(literal)
     end if
+    if(literal[0]='[' & literal[^literal-1]=']')
+        if(^literal = 2) {"[]"}
+            ; TODO: ここから？
+        var elemType: \wreck1@Type :: literal.sub(1,-1).split(",")[0]
 
     ; not literal; ignore
     ret null

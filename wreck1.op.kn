@@ -14,6 +14,7 @@ end class
 +const leqSymbol: []char :: "<="
 +const gtSymbol: []char :: ">"
 +const geqSymbol: []char :: ">="
++const catSymbol: []char :: "~"
 +const addSymbol: []char :: "+"
 +const subSymbol: []char :: "-"
 +const mulSymbol: []char :: "*"
@@ -21,6 +22,7 @@ end class
 +const remSymbol: []char :: "%"
 +const negSymbol: []char :: "-"
 +const notSymbol: []char :: "!"
++const lenSymbol: []char :: "^"
 
 
 +func assign(argTypes: []@Type): @Op
@@ -151,6 +153,20 @@ end func
     ret op
 end func
 
++func cat(argTypes: []@Type): @Op
+    if(^argTypes<>2 | argTypes[0]<>argTypes[1])
+        do @opTypeError("cat", argTypes)
+    elif(argTypes[0].defaultValue <> "[]") {もっとましな方法ないのかよ}
+        do @opTypeError("cat", argTypes)
+    end if
+
+    var op: @Op :: #@Op
+    do op.symbol :: @catSymbol
+    do op.retType :: argTypes[0]
+    do op.arity :: 2
+    ret op
+end func
+
 +func add(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
         do @opTypeError("add", argTypes)
@@ -265,13 +281,26 @@ end func
     ret op
 end func
 
++func len(argTypes: []@Type): @Op
+    if(^argTypes<>1 | argTypes[0].defaultValue<>"[]")
+        do @opTypeError("len", argTypes)
+    end if
+
+    var op: @Op :: #@Op
+    do op.symbol :: @lenSymbol
+    do op.retType :: @int64() {負の値になり得ないのに符号付き、どうなんだろう}
+    do op.arity :: 1
+    ret op
+end func
+
 
 
 func opTypeError(name: []char, argTypes: []@Type)
     var msg: []char :: "演算子の型エラー: \{name}に"
-    for i(0, ^argTypes-2)
-        do msg :~ argTypes[i].name ~ ", "
+    var argTypeNames: [][]char :: #[0,0]char
+    for i(0, ^argTypes-1)
+        do argTypeNames :~ [argTypes[i].name]
     end for
-    do msg :~ argTypes[^argTypes-1].name ~ "を作用できません"
+    do msg :~ argTypeNames.join(", ") ~ "を作用できません"
     do \util@crash(msg)
 end func
