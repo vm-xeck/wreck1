@@ -4,6 +4,7 @@ enum TokenKind
     ident
     numLiteral
     charLiteral
+    aggrigateInitLiteral
     strLiteral
     ; TODO: structLiteral
     comment
@@ -27,15 +28,16 @@ end enum
             case '\''
                 do tokenKind :: %charLiteral
                 do buf :: c.toStr()
+            case '$'
+                do tokenKind :: %aggregateInitLiteral
+                do buf :: c.toStr()
             case '\"'
                 do tokenKind :: %strLiteral
                 do buf :: c.toStr()
-            case '[', ']' {arrays}
-                do tokens.add(c.toStr())
             case '#'
                 do tokenKind :: %comment
             case ' ', '\t', '\n'
-            case '(', ')', '{', '}', ',' {ktp.}
+            case '(', ')', '{', '}', '[', ']', ',' {ktp.}
                 do tokens.add(c.toStr())
                 do buf :: ""
             case ':', '|', '&', '=', '<', '>', '+', '-', '*', '/', '%', '!', '~', '^'
@@ -99,6 +101,16 @@ end enum
             else
                 do buf :~ [code[i]]
             end if
+        case %aggregateInitLiteral
+            switch c(code[i])
+            case 'A' to 'Z', 'a' to 'z', '0' to '9', '_', '[', ']'
+                do buf :~ c.toStr()
+            default
+                do tokens.add(buf)
+                do buf :: ""
+                do tokenKind :: %init
+                do i :- 1
+            end switch
         case %strLiteral
             do buf :~ code[i].toStr()
             if(buf[^buf-1]='\"' & (buf[^buf-2]<>'\\'|buf[^buf-3]='\\'))
@@ -110,6 +122,8 @@ end enum
             if(code[i] = '#')
                 do tokenKind :: %init
             end if
+        default
+            do \util@crash("Token kind not supported yet!")
         end switch
     end for
 

@@ -408,7 +408,26 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
         do tokens.next()
 
     ; elif(token = "{") //struct
-    ; elif(token = "[") //array
+    elif(token = "[") {array literal}
+        do node :: \wreck1@makeLiteralNode("", null)
+        do tokens.next()
+        while(tokens.get() <> "]")
+            var arg: \wreck1@ExprNode :: @parseExpr(tokens, parent)
+            if(!\util@isNull(node.type) & arg.type<>node.type.elemType)
+                do \util@crash("Types of an array's elements vary")
+            else
+                do node.type :: \wreck1@array(arg.type)
+            end if
+            do node.args :~ [arg]
+            if(tokens.get()<>"," & tokens.get()<>"]")
+                do \util@crash("`,` or `]` expected")
+            end if
+            if(tokens.get() = ",")
+                do tokens.next()
+            end if
+        end while
+        do \util@expect(tokens.get(), "]")
+        do tokens.next()
     ; elif(token = "\"") //syntax sugar for []char
     elif(!\util@isNull(@literalToType(token))) {literal}
         do node :: \wreck1@makeLiteralNode(token, @literalToType(token))
