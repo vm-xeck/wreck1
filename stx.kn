@@ -420,7 +420,7 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
             end if
             do node.args :~ [arg]
             if(tokens.get()<>"," & tokens.get()<>"]")
-                do \util@crash("`,` or `]` expected")
+                do \util@crash("Array literal: `,` or `]` expected")
             end if
             if(tokens.get() = ",")
                 do tokens.next()
@@ -428,7 +428,7 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
         end while
         do \util@expect(tokens.get(), "]")
         do tokens.next()
-    ; elif(token = "\"") //syntax sugar for []char
+
     elif(!\util@isNull(@literalToType(token))) {literal}
         do node :: \wreck1@makeLiteralNode(token, @literalToType(token))
         do tokens.next()

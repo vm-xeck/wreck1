@@ -46,6 +46,13 @@ func literalToType(literal: []char): \wreck1@Type
             ret \wreck1@char_()
         end if
     end if
+    if(literal[0]='\"' & literal[^literal-1]='\"')
+        if(literal[^literal-2]='\\' & literal[^literal-3]<>'\\') {区切り間違え？}
+            ret null
+        else
+            ret \wreck1@array(\wreck1@char_())
+        end if
+    end if
     if(literal[0] = '$')
         ret @typeNameToType(literal.sub(1, -1))
     end if
