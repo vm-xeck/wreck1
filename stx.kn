@@ -386,15 +386,32 @@ func parseUnary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNod
     switch(tokens.get())
     case \wreck1@negSymbol
         do tokens.next()
-        var primary: \wreck1@ExprNode :: @parsePrimary(tokens, parent)
+        var primary: \wreck1@ExprNode :: @parseElemAccess(tokens, parent)
         ret \wreck1@makeOpNode(\wreck1@neg([primary.type]), [primary])
     case \wreck1@notSymbol
         do tokens.next()
-        var primary: \wreck1@ExprNode :: @parsePrimary(tokens, parent)
+        var primary: \wreck1@ExprNode :: @parseElemAccess(tokens, parent)
         ret \wreck1@makeOpNode(\wreck1@not([primary.type]), [primary])
     default
-        ret @parsePrimary(tokens, parent)
+        ret @parseElemAccess(tokens, parent)
     end switch
+end func
+
+func parseElemAccess(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
+    var lhs: \wreck1@ExprNode :: @parsePrimary(tokens, parent)
+    while loop(!tokens.term())
+        switch(tokens.get())
+        case \wreck1@aryElemSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseExpr(tokens, parent)
+            do \util@expect(tokens.get(), "]")
+            do tokens.next()
+            do lhs :: \wreck1@makeOpNode(\wreck1@aryElem([lhs.type, rhs.type]), [lhs, rhs])
+        default
+            break loop
+        end switch
+    end while
+    ret lhs
 end func
 
 func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode

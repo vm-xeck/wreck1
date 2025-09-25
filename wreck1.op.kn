@@ -23,6 +23,7 @@ end class
 +const negSymbol: []char :: "-"
 +const notSymbol: []char :: "!"
 +const lenSymbol: []char :: "^"
++const aryElemSymbol: []char :: "["
 
 
 +func assign(argTypes: []@Type): @Op
@@ -282,13 +283,25 @@ end func
 end func
 
 +func len(argTypes: []@Type): @Op
-    if(^argTypes<>1 | argTypes[0].defaultValue<>"[]")
+    if(^argTypes<>1 | argTypes[0].name.sub(0, 2)<>"[]")
         do @opTypeError("len", argTypes)
     end if
 
     var op: @Op :: #@Op
     do op.symbol :: @lenSymbol
     do op.retType :: @int64() {負の値になり得ないのに符号付き、どうなんだろう}
+    do op.arity :: 1
+    ret op
+end func
+
++func aryElem(argTypes: []@Type): @Op
+    if(^argTypes<>2 | argTypes[0].name.sub(0, 2)<>"[]" | argTypes[1]<>@int64())
+        do @opTypeError("aryElem", argTypes)
+    end if
+
+    var op: @Op :: #@Op
+    do op.symbol :: @aryElemSymbol
+    do op.retType :: argTypes[0].aryElemType
     do op.arity :: 1
     ret op
 end func
