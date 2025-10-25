@@ -49,9 +49,9 @@ func double(): @Type
     ret type
 end func
 
-func array(elemType: @Type): @Type
+func array(elemType: @Type, elemNum: int): @Type {使う予定は今のところない}
     var type: @Type :: #@Type
-    do type.name :: "[ x ]"{TODO: ここから}
+    do type.name :: "[\{elemNum} x \{elemType.name}]"
 end func
 
 func ptr(): @Type
@@ -69,6 +69,9 @@ func label(): @Type
 end func
 
 func typeToLlvmType(type: \wreck1@Type): @Type
+    if(type.name.sub(0, 2) = "[]") {TODO: enum導入で解決したい}
+        ret @ptr()
+    end if
     switch(type)
     case \wreck1@bool_()
         ret @i(1)
