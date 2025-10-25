@@ -47,6 +47,10 @@ func charLiteralToLlvmLiteral(literal: []char): []char
     ret null
 end func
 
+func aryLiteralToSize(literal: \wreck1@ExprNode, elemType: @Type): int
+    ret ^literal.args * elemType.size
+end func
+
 func escapeSequenceToLlvmChar(escapeSequence: []char): []char
     switch(escapeSequence)
     case "\\\\"
