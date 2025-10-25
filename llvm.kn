@@ -1,9 +1,11 @@
 include type
 include inst
 include misc
+include lib
 
 
 +func print(ast: \wreck1@StmtNode)
+    do @init :: @declareFuncs()
     do @init :: "define void @_() {\n"
     do @unnamedLocal :: 1
     do @whileCount :: 0

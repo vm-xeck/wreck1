@@ -1,0 +1,14 @@
+func declareFuncs(): []char
+    var llvm: []char :: ""
+    do llvm :~ "declare ptr @malloc(i32)\n"
+    do llvm :~ "declare void @free(ptr)\n"
+    ret llvm
+end func
+
+func malloc(result: []char, size: int): []char
+    ret @call(result, @ptr(), "@malloc", "i32 \{size}")
+end func
+
+func free(ptr: []char): []char
+    ret @call("", @void(), "@free", "ptr \{ptr}")
+end func
