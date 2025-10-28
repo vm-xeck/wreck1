@@ -118,7 +118,7 @@ end func
 +func array(elemType: @Type): @Type
     var type: @Type :: #@Type
     do type.name :: "[]\{elemType.name}"
-    do type.defaultValue :: "&\{type.name}"
+    do type.defaultValue :: "$\{type.name}"
     do type.aryElemType :: elemType
     ret type
 end func
