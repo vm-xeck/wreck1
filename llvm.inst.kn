@@ -98,6 +98,26 @@ func fcmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []
     ret "  \{result} = fcmp \{cond} \{ty} \{op1}, \{op2}\n"
 end func
 
+func extractvalue(result: []char, aggrTy: @Type, val: []char, idx: int): []char
+    ret "  \{result} = extractvalue \{aggrTy} \{val}, \{idx}\n"
+end func
+
+func insertvalue(result: []char, aggrTy: @Type, val: []char, ty: @Type, elt: []char, idx: int): []char
+    ret "  \{result} = insertvalue \{aggrTy} \{val}, \{ty} \{elt}, \{idx}\n"
+end func
+
+func ptrtoint(result: []char, ty: @Type, value: []char, ty2: @Type): []char
+    ret "  \{result} = ptrtoint \{ty} \{value} to \{ty2}\n"
+end func
+
+func inttoptr(result: []char, ty: @Type, value: []char, ty2: @Type): []char
+    ret "  \{result} = inttoptr \{ty} \{value} to \{ty2}\n"
+end func
+
+func zext(result: []char, ty: @Type, value: []char, ty2: @Type): []char
+    ret "  \{result} = zext \{ty} \{value} to \{ty2}\n"
+end func
+
 func call(result: []char, ty: @Type, fnptrval: []char, args: []char): []char
     if(result=&null | result="")
         ret "  call \{ty} \{fnptrval}(\{args})\n"

@@ -13,7 +13,7 @@ func defineStructs(): []char
 end func
 
 
-func malloc(result: []char, byte: int): []char
+func malloc(result: []char, byte: []char): []char
     ret @call(result, @ptr(), "@malloc", "i32 \{byte}")
 end func
 
@@ -21,6 +21,6 @@ func free(ptr: []char): []char
     ret @call("", @void(), "@free", "ptr \{ptr}")
 end func
 
-func memcpy(dest: []char, src: []char, byte: int): []char
+func memcpy(dest: []char, src: []char, byte: []char): []char
     ret @call("", @ptr(), "@memcpy", "ptr \{dest}, ptr \{src}, i32 \{byte}")
 end func

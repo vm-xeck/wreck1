@@ -306,6 +306,35 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         case @float_(), @double()
             do llvm :~ @fcmp("%\{@unnamedLocal}", cond, @typeToLlvmType(node.args[0].type), exprs[0], exprs[1])
         end switch
+    case \wreck1@catSymbol
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[1], 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @add("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-2}", "%\{@unnamedLocal-1}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @malloc("%\{@unnamedLocal}", "%\{@unnamedLocal-1}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 1)
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[1], 1)
+        do @unnamedLocal :+ 1
+        do llvm :~ @memcpy("%\{@unnamedLocal-3}", "%\{@unnamedLocal-2}", "%\{@unnamedLocal-6}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-4}", @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @zext("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-8}", @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @add("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-2}", "%\{@unnamedLocal-1}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @inttoptr("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-1}", @ptr())
+        do @unnamedLocal :+ 1
+        do llvm :~ @memcpy("%\{@unnamedLocal-1}", "%\{@unnamedLocal-6}", "%\{@unnamedLocal-10}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @insertvalue("%\{@unnamedLocal}", @struct("%Ary"), @struct("%Ary").defaultValue, @i(32), "%\{@unnamedLocal-10}", 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @insertvalue("%\{@unnamedLocal}", @struct("%Ary"), "%\{@unnamedLocal-1}", @ptr(), "%\{@unnamedLocal-10}", 1)
     case \wreck1@addSymbol
         do @unnamedLocal :+ 1
         switch(type)

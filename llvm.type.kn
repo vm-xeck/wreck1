@@ -52,6 +52,14 @@ end func
 func array(elemType: @Type, elemNum: int): @Type {使う予定は今のところない}
     var type: @Type :: #@Type
     do type.name :: "[\{elemNum} x \{elemType.name}]"
+    ret type
+end func
+
+func struct(name: []char): @Type
+    var type: @Type :: #@Type
+    do type.name :: name
+    do type.defaultValue :: "poison" {ほんとうに？}
+    ret type
 end func
 
 func ptr(): @Type
@@ -70,7 +78,7 @@ end func
 
 func typeToLlvmType(type: \wreck1@Type): @Type
     if(type.name.sub(0, 2) = "[]") {TODO: enum導入で解決したい}
-        ret @ptr()
+        ret @struct("%Ary")
     end if
     switch(type)
     case \wreck1@bool_()
