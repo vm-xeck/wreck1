@@ -99,7 +99,7 @@ func fcmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []
 end func
 
 func call(result: []char, ty: @Type, fnptrval: []char, args: []char): []char
-    if(ty = @void())
+    if(result=&null | result="")
         ret "  call \{ty} \{fnptrval}(\{args})\n"
     else
         ret "  \{result} = call \{ty} \{fnptrval}(\{args})\n"

@@ -2,13 +2,18 @@ func declareFuncs(): []char
     var llvm: []char :: ""
     do llvm :~ "declare ptr @malloc(i32)\n"
     do llvm :~ "declare void @free(ptr)\n"
+    do llvm :~ "declare ptr @memcpy(ptr, ptr, i32)"
     ret llvm
 end func
 
-func malloc(result: []char, size: int): []char
-    ret @call(result, @ptr(), "@malloc", "i32 \{size}")
+func malloc(result: []char, byte: int): []char
+    ret @call(result, @ptr(), "@malloc", "i32 \{byte}")
 end func
 
 func free(ptr: []char): []char
     ret @call("", @void(), "@free", "ptr \{ptr}")
+end func
+
+func memcpy(dest: []char, src: []char, byte: int): []char
+    ret @call("", @ptr(), "@memcpy", "ptr \{dest}, ptr \{src}, i32 \{byte}")
 end func
