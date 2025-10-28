@@ -4,7 +4,7 @@ enum TokenKind
     ident
     numLiteral
     charLiteral
-    aggrigateInitLiteral
+    aggregateInitLiteral
     strLiteral
     ; TODO: structLiteral
     comment

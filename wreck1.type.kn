@@ -2,9 +2,9 @@
     +var name: []char
     +var defaultValue: []char
     +var sfx: []char
-    +var isValid: func<[]char,bool>
+    +var isValid: func<([]char):bool>
     +var aryElemType: Type
-    +var strctElemTypes: []@Type
+    +var strctElemTypes: []Type
 
     +*func cmp(t: kuin@Class): int
         var type2: Type :: t $ Type

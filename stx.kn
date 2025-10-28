@@ -430,7 +430,7 @@ func parsePrimary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprN
         do tokens.next()
         while(tokens.get() <> "]")
             var arg: \wreck1@ExprNode :: @parseExpr(tokens, parent)
-            if(!\util@isNull(node.type) & arg.type<>node.type.elemType)
+            if(!\util@isNull(node.type) & arg.type<>node.type.aryElemType)
                 do \util@crash("Types of an array's elements vary")
             else
                 do node.type :: \wreck1@array(arg.type)

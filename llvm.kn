@@ -5,7 +5,8 @@ include lib
 
 
 +func print(ast: \wreck1@StmtNode)
-    do @cui@print(@declareFuncs())
+    do cui@print(@declareFuncs())
+    do cui@print(@defineStructs())
     do @init :: "define void @_() {\n"
     do @unnamedLocal :: 1
     do @whileCount :: 0
