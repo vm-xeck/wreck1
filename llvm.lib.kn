@@ -2,14 +2,15 @@ func declareFuncs(): []char
     var llvm: []char :: ""
     do llvm :~ "declare ptr @malloc(i32)\n"
     do llvm :~ "declare void @free(ptr)\n"
-    do llvm :~ "declare ptr @memcpy(ptr, ptr, i32)"
+    do llvm :~ "declare ptr @memcpy(ptr, ptr, i32)\n"
     ret llvm
 end func
 
 
 func defineStructs(): []char
     var llvm: []char :: ""
-    do llvm :~ "%Ary = type {i32, ptr}"{size in bytes and the actual pointer}
+    do llvm :~ "%Ary = type {i32, ptr}\n"{size in bytes and the actual pointer}
+    ret llvm
 end func
 
 
