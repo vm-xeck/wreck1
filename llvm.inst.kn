@@ -98,6 +98,10 @@ func fcmp(result: []char, cond: []char, ty: @Type, op1: []char, op2: []char): []
     ret "  \{result} = fcmp \{cond} \{ty} \{op1}, \{op2}\n"
 end func
 
+func getelementptr(result: []char, ty: @Type, ptrval: []char, ty1: @Type, idx: int): []char {TODO: 本当は中のフィールドにアクセスするために複数のインデックスを取れるべき}
+    ret "  \{result} = getelementptr \{ty} \{ptrval}, \{ty1} \{idx}\n"
+end func
+
 func extractvalue(result: []char, aggrTy: @Type, val: []char, idx: int): []char
     ret "  \{result} = extractvalue \{aggrTy} \{val}, \{idx}\n"
 end func

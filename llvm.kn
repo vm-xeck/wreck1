@@ -375,6 +375,25 @@ func opToLlvm(node: \wreck1@ExprNode): []char
     case \wreck1@notSymbol
         do @unnamedLocal :+ 1
         do llvm :~ @xor("%\{@unnamedLocal}", type, exprs[0], "true")
+    case \wreck1@lenSymbol
+        ; 要素の型からメモリ上に占めるバイト数を得る(後で配列全体の長さを割るため)
+        ; 要素がstructならgetelementptrで動的にバイト数を計算
+        var elemType: @Type :: @typeToLlvmType(node.args[0].type.argElemType)
+        if(elemType.defaultValue = "poison"){LLVMにおいてstructで表現される型。TODO: もっときれいな方法を作る}
+            do @unnamedLocal :+ 1
+            do llvm :~ @getelementptr("%\{@unnamedLocal}", elemType, "null", @i(32), 1)
+            do @unnamedLocal :+ 1
+            do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-1}", @i(64))
+        else
+            var lenByte: int :: elemType.size / 8
+            do llvm :~ @literalToLlvm(\wreck1@makeLiteralNode("\{lenByte}", \wreck1@int64()))
+        end if
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @zext("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-1}", @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @sdiv("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-1}", "%\{@unnamedLocal-3}")
     default
         do \util@crash("Operator \{node.op.symbol} has no corresponding LLVM representation yet")
     end switch
