@@ -48,7 +48,15 @@ func charLiteralToLlvmLiteral(literal: []char): []char
 end func
 
 func aryLiteralToSize(literal: \wreck1@ExprNode, elemType: @Type): int
-    ret ^literal.args * elemType.size
+    if(!\util@isNull(literal.args))
+        ret ^literal.args * elemType.size
+    else {[]char型で"こういうリテラル"である場合しか考慮していない}
+        var len: int :: 0
+        for i(1, ^literal.value-2) {両端は"<-これなのでいらない}
+            do len :+ 8 * \stx@lenUtf8(literal.value[i]){TODO: エスケープシーケンスは？}
+        end for
+        ret len
+    end if
 end func
 
 func escapeSequenceToLlvmChar(escapeSequence: []char): []char

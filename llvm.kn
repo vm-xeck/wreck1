@@ -436,6 +436,34 @@ end func
 func literalToLlvm(node: \wreck1@ExprNode): []char
     var type: @Type :: @typeToLlvmType(node.type)
     var literal: []char :: @dropTypeSfx(node.value, node.type)
+    if(type = @struct("%Ary")) {名前直打ちはどうなの}
+        var llvm: []char :: ""
+        var len: int :: 0
+        var byte: int :: @aryLiteralToSize(node) / 8
+        var aryLiteral: []char :: ""
+        var elemType: @Type :: @typeToLlvmType(node.type.aryElemType)
+        if(\util@isNull(node.args) & node.value=&null & node.value[0]='\"' & node.value[^node.value-1]='\"') {"[]char literal like me"}
+            for i(1, ^node.value-2)
+                do len :+ \stx@lenUtf8(node.value[i])
+            end for
+            do aryLiteral :: "c\{literal}"
+        else
+            do len :: ^node.args
+            var elems: [][]char :: #[0,0]char
+            for (0, ^args-1)
+                do elems :~ ["\{elemType} \{node.args[i].value}"]
+            end for
+            do aryLiteral :: "[" ~ elems.join(", ") ~ "]"
+        end if
+        do @unnamedLocal :+ 1
+        do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
+        do llvm :~ @store(@array(elemType, len), aryLiteral, @ptr(), "%\{@unnamedLocal}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @i(32), "\{byte}", 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @ptr(), "%\{@unnamedLocal-2}")
+        ret llvm
+    end if
     switch(node.type)
     case \wreck1@bool_(), \wreck1@int8(), \wreck1@int16(), \wreck1@int32(), \wreck1@int64(), \wreck1@uint8(), \wreck1@uint16(), \wreck1@uint32(), \wreck1@uint64()
         do @unnamedLocal :+ 1

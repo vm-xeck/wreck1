@@ -104,7 +104,7 @@ func numLiteralToType(literal: []char): \wreck1@Type
     ret null
 end func
 
-func lenUtf8(c: char): int
++func lenUtf8(c: char): int
     var utf16: bit16 :: c $ bit16
     if(utf16.and(0xFC00b16) = 0xD800b16) {HSG}
         ret 4
