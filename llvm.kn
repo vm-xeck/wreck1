@@ -378,7 +378,7 @@ func opToLlvm(node: \wreck1@ExprNode): []char
     case \wreck1@lenSymbol
         ; 要素の型からメモリ上に占めるバイト数を得る(後で配列全体の長さを割るため)
         ; 要素がstructならgetelementptrで動的にバイト数を計算
-        var elemType: @Type :: @typeToLlvmType(node.args[0].type.argElemType)
+        var elemType: @Type :: @typeToLlvmType(node.args[0].type.aryElemType)
         if(elemType.defaultValue = "poison"){LLVMにおいてstructで表現される型。TODO: もっときれいな方法を作る}
             do @unnamedLocal :+ 1
             do llvm :~ @getelementptr("%\{@unnamedLocal}", elemType, "null", @i(32), 1)

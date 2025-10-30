@@ -7,6 +7,7 @@ enum TokenKind
     aggregateInitLiteral
     strLiteral
     ; TODO: structLiteral
+    aryTypeName
     comment
 end enum
 
@@ -37,9 +38,12 @@ end enum
             case '#'
                 do tokenKind :: %comment
             case ' ', '\t', '\n'
-            case '(', ')', '{', '}', '[', ']', ',' {ktp.}
+            case '(', ')', '{', '}', ',', ']' {ktp.}
                 do tokens.add(c.toStr())
                 do buf :: ""
+            case '['
+                do tokenKind :: %aryTypeName
+                do buf :: c.toStr()
             case ':', '|', '&', '=', '<', '>', '+', '-', '*', '/', '%', '!', '~', '^'
                 do tokenKind :: %op
                 do buf :: c.toStr()
@@ -117,6 +121,27 @@ end enum
                 do tokens.add(buf)
                 do buf :: ""
                 do tokenKind :: %init
+            end if
+        case %aryTypeName
+            if(buf = "[")
+                if(code[i] = ']') {array type name}
+                    do buf :~ code[i].toStr()
+                else {wasn't type name, it's array literal}
+                    do tokens.add(buf)
+                    do buf :: ""
+                    do tokenKind :: %init
+                    do i :- 1
+                end if
+            else
+                switch(code[i])
+                case '[', ']', 'A' to 'Z', 'a' to 'z', '0' to '9', '_'
+                    do buf :~ code[i].toStr()
+                default
+                    do tokens.add(buf)
+                    do buf :: ""
+                    do tokenKind :: %init
+                    do i :- 1
+                end switch
             end if
         case %comment
             if(code[i] = '#')
