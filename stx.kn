@@ -352,6 +352,10 @@ func parseAdd(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNode
             do tokens.next()
             var rhs: \wreck1@ExprNode :: @parseMul(tokens, parent)
             do lhs :: \wreck1@makeOpNode(\wreck1@sub([lhs.type, rhs.type]), [lhs, rhs])
+        case \wreck1@catSymbol
+            do tokens.next()
+            var rhs: \wreck1@ExprNode :: @parseMul(tokens, parent)
+            do lhs :: \wreck1@makeOpNode(\wreck1@cat([lhs.type, rhs.type]), [lhs, rhs])
         default
             break loop
         end switch

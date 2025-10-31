@@ -29,7 +29,7 @@ assignment = { var-name, "<-" }, or;
 or = and, { "|", and };
 and = relational, { "&", relational };
 relational = add, { ( "=" | "<>" | "<" | "<=" | ">" | ">=" ), add };
-add = mul, { ( "+" | "-" ), mul };
+add = mul, { ( "+" | "-" | "^" ), mul };
 mul = unary, { ( "*" | "/" | "%" ), unary };
 unary = [ "-" | "!" | "^" ], elem-access;
 elem-access = primary, { "[", expr, "]" };
