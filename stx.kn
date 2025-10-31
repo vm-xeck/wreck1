@@ -392,6 +392,10 @@ func parseUnary(tokens: list<[]char>, parent: \wreck1@StmtNode): \wreck1@ExprNod
         do tokens.next()
         var primary: \wreck1@ExprNode :: @parseElemAccess(tokens, parent)
         ret \wreck1@makeOpNode(\wreck1@not([primary.type]), [primary])
+    case \wreck1@lenSymbol
+        do tokens.next()
+        var primary: \wreck1@ExprNode :: @parseElemAccess(tokens, parent)
+        ret \wreck1@makeOpNode(\wreck1@len([primary.type]), [primary])
     default
         ret @parseElemAccess(tokens, parent)
     end switch

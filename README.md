@@ -31,7 +31,7 @@ and = relational, { "&", relational };
 relational = add, { ( "=" | "<>" | "<" | "<=" | ">" | ">=" ), add };
 add = mul, { ( "+" | "-" ), mul };
 mul = unary, { ( "*" | "/" | "%" ), unary };
-unary = [ "-" | "!" ], elem-access;
+unary = [ "-" | "!" | "^" ], elem-access;
 elem-access = primary, { "[", expr, "]" };
 primary = literal | var-ref | func-call | "(", expr, ")";
 
