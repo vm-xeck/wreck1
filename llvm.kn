@@ -306,6 +306,25 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         case @float_(), @double()
             do llvm :~ @fcmp("%\{@unnamedLocal}", cond, @typeToLlvmType(node.args[0].type), exprs[0], exprs[1])
         end switch
+    case \wreck1@addSymbol
+        do @unnamedLocal :+ 1
+        switch(type)
+        case @i(1), @i(8), @i(16), @i(32), @i(64)
+            do llvm :~ @add("%\{@unnamedLocal}", type, exprs[0], exprs[1])
+        case @float_(), @double()
+            do llvm :~ @fadd("%\{@unnamedLocal}", type, exprs[0], exprs[1])
+        end switch
+    case \wreck1@subSymbol, \wreck1@negSymbol
+        do @unnamedLocal :+ 1
+        if(node.op.arity = 1)
+            do exprs :: [type.defaultValue] ~ exprs
+        end if
+        switch(type)
+        case @i(1), @i(8), @i(16), @i(32), @i(64)
+            do llvm :~ @sub("%\{@unnamedLocal}", type, exprs[0], exprs[1])
+        case @float_(), @double()
+            do llvm :~ @fsub("%\{@unnamedLocal}", type, exprs[0], exprs[1])
+        end switch
     case \wreck1@catSymbol
         do @unnamedLocal :+ 1
         do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 0)
@@ -335,25 +354,6 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         do llvm :~ @insertvalue("%\{@unnamedLocal}", @struct("%Ary"), @struct("%Ary").defaultValue, @i(32), "%\{@unnamedLocal-10}", 0)
         do @unnamedLocal :+ 1
         do llvm :~ @insertvalue("%\{@unnamedLocal}", @struct("%Ary"), "%\{@unnamedLocal-1}", @ptr(), "%\{@unnamedLocal-10}", 1)
-    case \wreck1@addSymbol
-        do @unnamedLocal :+ 1
-        switch(type)
-        case @i(1), @i(8), @i(16), @i(32), @i(64)
-            do llvm :~ @add("%\{@unnamedLocal}", type, exprs[0], exprs[1])
-        case @float_(), @double()
-            do llvm :~ @fadd("%\{@unnamedLocal}", type, exprs[0], exprs[1])
-        end switch
-    case \wreck1@subSymbol, \wreck1@negSymbol
-        do @unnamedLocal :+ 1
-        if(node.op.arity = 1)
-            do exprs :: [type.defaultValue] ~ exprs
-        end if
-        switch(type)
-        case @i(1), @i(8), @i(16), @i(32), @i(64)
-            do llvm :~ @sub("%\{@unnamedLocal}", type, exprs[0], exprs[1])
-        case @float_(), @double()
-            do llvm :~ @fsub("%\{@unnamedLocal}", type, exprs[0], exprs[1])
-        end switch
     case \wreck1@mulSymbol
         do @unnamedLocal :+ 1
         switch(type)
@@ -439,29 +439,46 @@ func literalToLlvm(node: \wreck1@ExprNode): []char
     if(type = @struct("%Ary")) {名前直打ちはどうなの}
         var llvm: []char :: ""
         var len: int :: 0
-        var byte: int :: @aryLiteralToSize(node) / 8
         var aryLiteral: []char :: ""
         var elemType: @Type :: @typeToLlvmType(node.type.aryElemType)
-        if(\util@isNull(node.args) & node.value=&null & node.value[0]='\"' & node.value[^node.value-1]='\"') {"[]char literal like me"}
-            for i(1, ^node.value-2)
-                do len :+ \stx@lenUtf8(node.value[i])
-            end for
-            do aryLiteral :: "c\{literal}"
-        else
+        var byte: int :: @aryLiteralToSize(node, elemType) / 8
+        if(!(node.value =& null))
+            if(node.value[0] = '$')
+                do len :: 0
+                do aryLiteral :: "zeroinitializer"
+            elif(node.value[0]='\"' & node.value[^node.value-1]='\"') {"[]char literal like me"}
+                for i(1, ^node.value-2)
+                    do len :+ \stx@lenUtf8(node.value[i])
+                end for
+                do aryLiteral :: "c\{literal}"
+            end if
+            do @unnamedLocal :+ 1
+            do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
+            do llvm :~ @store(@array(elemType, len), aryLiteral, "%\{@unnamedLocal}")
+        elif(!(node.args =& null)) {other literals: may contain non-literal exprs}
             do len :: ^node.args
             var elems: [][]char :: #[0,0]char
-            for (0, ^args-1)
-                do elems :~ ["\{elemType} \{node.args[i].value}"]
+            for i(0, ^node.args)
+                do llvm :~ @exprToLlvm(node.args[i])
+                do elems :~ ["%\{@unnamedLocal}"]
             end for
-            do aryLiteral :: "[" ~ elems.join(", ") ~ "]"
+            do @unnamedLocal :+ 1
+            do llvm :~ @insertvalue("%\{@unnamedLocal}", @array(elemType, len), "zeroinitializer", elemType, elems[0], 0)
+            for i(1, len-1)
+                do @unnamedLocal :+ 1
+                do llvm :~ @insertvalue("%\{@unnamedLocal}", @array(elemType, len), "%\{@unnamedLocal-1}", elemType, elems[i], i)
+            end for
+            do @unnamedLocal :+ 1
+            do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
+            do llvm :~ @store(@array(elemType, len), "%\{@unnamedLocal-1}", "%\{@unnamedLocal}")
+        else
+            do \util@crash("Invalid ary literal: node.args=&null & node.value=&null")
+            ret null
         end if
-        do @unnamedLocal :+ 1
-        do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
-        do llvm :~ @store(@array(elemType, len), aryLiteral, @ptr(), "%\{@unnamedLocal}")
         do @unnamedLocal :+ 1
         do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @i(32), "\{byte}", 0)
         do @unnamedLocal :+ 1
-        do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @ptr(), "%\{@unnamedLocal-2}")
+        do llvm :~ @insertvalue("%\{@unnamedLocal}", type, "%\{@unnamedLocal-1}", @ptr(), "%\{@unnamedLocal-2}", 1)
         ret llvm
     end if
     switch(node.type)

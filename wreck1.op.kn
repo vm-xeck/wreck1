@@ -14,9 +14,9 @@ end class
 +const leqSymbol: []char :: "<="
 +const gtSymbol: []char :: ">"
 +const geqSymbol: []char :: ">="
-+const catSymbol: []char :: "~"
 +const addSymbol: []char :: "+"
 +const subSymbol: []char :: "-"
++const catSymbol: []char :: "~"
 +const mulSymbol: []char :: "*"
 +const divSymbol: []char :: "/"
 +const remSymbol: []char :: "%"
@@ -154,20 +154,6 @@ end func
     ret op
 end func
 
-+func cat(argTypes: []@Type): @Op
-    if(^argTypes<>2 | argTypes[0]<>argTypes[1])
-        do @opTypeError("cat", argTypes)
-    elif(argTypes[0].name.sub(0, 2) <> "[]") {もっとましな方法ないのかよ}
-        do @opTypeError("cat", argTypes)
-    end if
-
-    var op: @Op :: #@Op
-    do op.symbol :: @catSymbol
-    do op.retType :: argTypes[0]
-    do op.arity :: 2
-    ret op
-end func
-
 +func add(argTypes: []@Type): @Op
     if(^argTypes<>2 | argTypes[0]<>argTypes[1])
         do @opTypeError("add", argTypes)
@@ -197,6 +183,20 @@ end func
 
     var op: @Op :: #@Op
     do op.symbol :: @subSymbol
+    do op.retType :: argTypes[0]
+    do op.arity :: 2
+    ret op
+end func
+
++func cat(argTypes: []@Type): @Op
+    if(^argTypes<>2 | argTypes[0]<>argTypes[1])
+        do @opTypeError("cat", argTypes)
+    elif(argTypes[0].name.sub(0, 2) <> "[]") {もっとましな方法ないのかよ}
+        do @opTypeError("cat", argTypes)
+    end if
+
+    var op: @Op :: #@Op
+    do op.symbol :: @catSymbol
     do op.retType :: argTypes[0]
     do op.arity :: 2
     ret op

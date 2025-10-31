@@ -16,6 +16,9 @@ func nodeToLlvmName(node: \wreck1@StmtNode): []char
 end func
 
 func dropTypeSfx(value: []char, type: \wreck1@Type): []char
+    if(type.sfx =& null)
+        ret value
+    end if
     if(value.sub(^value-^type.sfx, -1) = type.sfx)
         ret value.sub(0, ^value-^type.sfx)
     else
@@ -48,14 +51,21 @@ func charLiteralToLlvmLiteral(literal: []char): []char
 end func
 
 func aryLiteralToSize(literal: \wreck1@ExprNode, elemType: @Type): int
-    if(!\util@isNull(literal.args))
+    if(!(literal.args=&null))
         ret ^literal.args * elemType.size
-    else {[]char型で"こういうリテラル"である場合しか考慮していない}
-        var len: int :: 0
-        for i(1, ^literal.value-2) {両端は"<-これなのでいらない}
-            do len :+ 8 * \stx@lenUtf8(literal.value[i]){TODO: エスケープシーケンスは？}
+    elif(!(literal.value=&null))
+        if(literal.value[0] = '$')
+            ret 0
+        end if
+        {[]char型で"こういうリテラル"である場合しか考慮していない}
+        var size: int :: 0
+        for i(1, ^literal.value-2) {両端はdouble-quoteなのでいらない}
+            do size :+ 8 * \stx@lenUtf8(literal.value[i]){TODO: エスケープシーケンスは？}
         end for
-        ret len
+        ret size
+    else {?????}
+        do \util@crash("Invalid ary literal: both args and value are null")
+        ret -1
     end if
 end func
 

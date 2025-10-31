@@ -120,6 +120,7 @@ end func
     do type.name :: "[]\{elemType.name}"
     do type.defaultValue :: "$\{type.name}"
     do type.aryElemType :: elemType
+    do type.sfx :: ""
     ret type
 end func
 
@@ -128,5 +129,6 @@ end func
     do type.name :: name
     do type.defaultValue :: "{}"
     do type.strctElemTypes :: elemTypes
+    do type.sfx :: ""
     ret type
 end func

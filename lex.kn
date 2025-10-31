@@ -107,7 +107,26 @@ end enum
             end if
         case %aggregateInitLiteral
             switch c(code[i])
-            case 'A' to 'Z', 'a' to 'z', '0' to '9', '_', '[', ']'
+            case '['
+                switch(buf[^buf-1])
+                case ']', '$'
+                    do buf :~ c.toStr()
+                default
+                    do tokens.add(buf)
+                    do buf :: ""
+                    do tokenKind :: %init
+                    do i :- 1
+                end switch
+            case ']'
+                if(buf[^buf-1] = '[')
+                    do buf :~ c.toStr()
+                else
+                    do tokens.add(buf)
+                    do buf :: ""
+                    do tokenKind :: %init
+                    do i :- 1
+                end if
+            case 'A' to 'Z', 'a' to 'z', '0' to '9', '_'
                 do buf :~ c.toStr()
             default
                 do tokens.add(buf)
@@ -134,7 +153,25 @@ end enum
                 end if
             else
                 switch(code[i])
-                case '[', ']', 'A' to 'Z', 'a' to 'z', '0' to '9', '_'
+                case '['
+                    if(buf[^buf-1] = ']')
+                        do buf :~ code[i].toStr()
+                    else
+                        do tokens.add(buf)
+                        do buf :: ""
+                        do tokenKind :: %init
+                        do i :- 1
+                    end if
+                case ']'
+                    if(buf[^buf-1] = '[')
+                        do buf :~ code[i].toStr()
+                    else
+                        do tokens.add(buf)
+                        do buf :: ""
+                        do tokenKind :: %init
+                        do i :- 1
+                    end if
+                case 'A' to 'Z', 'a' to 'z', '0' to '9', '_'
                     do buf :~ code[i].toStr()
                 default
                     do tokens.add(buf)
