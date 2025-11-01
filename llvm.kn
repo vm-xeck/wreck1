@@ -439,26 +439,41 @@ func literalToLlvm(node: \wreck1@ExprNode): []char
     if(type = @struct("%Ary")) {名前直打ちはどうなの}
         var llvm: []char :: ""
         var len: int :: 0
+        var byte: int :: 0
         var aryLiteral: []char :: ""
         var elemType: @Type :: @typeToLlvmType(node.type.aryElemType)
-        var byte: int :: @aryLiteralToSize(node, elemType) / 8
-        if(!(node.value =& null))
+        if(node.value<>&null & ^node.value>0)
             if(node.value[0] = '$')
                 do len :: 0
+                do byte :: 0
                 do aryLiteral :: "zeroinitializer"
             elif(node.value[0]='\"' & node.value[^node.value-1]='\"') {"[]char literal like me"}
-                for i(1, ^node.value-2)
-                    do len :+ \stx@lenUtf8(node.value[i])
-                end for
-                do aryLiteral :: "c\{literal}"
+                do aryLiteral :: @strLiteralToLlvmLiteral(node.value)
+                do byte :: @llvmStrLiteralToSize(aryLiteral) / 8
+                do len :: byte
             end if
             do @unnamedLocal :+ 1
             do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
             do llvm :~ @store(@array(elemType, len), aryLiteral, "%\{@unnamedLocal}")
-        elif(!(node.args =& null)) {other literals: may contain non-literal exprs}
+            do @unnamedLocal :+ 1
+            do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @i(32), "\{byte}", 0)
+        elif(node.args<>&null & ^node.args>0) {other literals: may contain non-literal exprs}
             do len :: ^node.args
+            var byteExpr: []char :: ""
+            if(elemType.defaultValue = "poison"){LLVMにおいてstructで表現される型。TODO: もっときれいな方法を作る}
+                do @unnamedLocal :+ 1
+                do llvm :~ @getelementptr("%\{@unnamedLocal}", elemType, "null", @i(32), 1)
+                do @unnamedLocal :+ 1
+                do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-1}", @i(32))
+                do @unnamedLocal :+ 1
+                do llvm :~ @mul("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-1}", "\{len}")
+            else
+                do byte :: elemType.size * len / 8
+                do llvm :~ @literalToLlvm(\wreck1@makeLiteralNode("\{byte}\{\wreck1@int32().sfx}", \wreck1@int32()))
+            end if
+            do byteExpr :: "%\{@unnamedLocal}"
             var elems: [][]char :: #[0,0]char
-            for i(0, ^node.args)
+            for i(0, len-1)
                 do llvm :~ @exprToLlvm(node.args[i])
                 do elems :~ ["%\{@unnamedLocal}"]
             end for
@@ -469,14 +484,14 @@ func literalToLlvm(node: \wreck1@ExprNode): []char
                 do llvm :~ @insertvalue("%\{@unnamedLocal}", @array(elemType, len), "%\{@unnamedLocal-1}", elemType, elems[i], i)
             end for
             do @unnamedLocal :+ 1
-            do llvm :~ @malloc("%\{@unnamedLocal}", "\{byte}")
+            do llvm :~ @malloc("%\{@unnamedLocal}", "\{byteExpr}")
             do llvm :~ @store(@array(elemType, len), "%\{@unnamedLocal-1}", "%\{@unnamedLocal}")
+            do @unnamedLocal :+ 1
+            do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @i(32), "\{byteExpr}", 0)
         else
             do \util@crash("Invalid ary literal: node.args=&null & node.value=&null")
             ret null
         end if
-        do @unnamedLocal :+ 1
-        do llvm :~ @insertvalue("%\{@unnamedLocal}", type, type.defaultValue, @i(32), "\{byte}", 0)
         do @unnamedLocal :+ 1
         do llvm :~ @insertvalue("%\{@unnamedLocal}", type, "%\{@unnamedLocal-1}", @ptr(), "%\{@unnamedLocal-2}", 1)
         ret llvm

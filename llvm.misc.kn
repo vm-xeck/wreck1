@@ -50,23 +50,43 @@ func charLiteralToLlvmLiteral(literal: []char): []char
     ret null
 end func
 
-func aryLiteralToSize(literal: \wreck1@ExprNode, elemType: @Type): int
-    if(!(literal.args=&null))
-        ret ^literal.args * elemType.size
-    elif(!(literal.value=&null))
-        if(literal.value[0] = '$')
-            ret 0
+func strLiteralToLlvmLiteral(literal: []char): []char
+    var result: []char :: "c\""
+    for i(1, ^literal-2)
+        switch es(literal.sub(i, 2))
+        case "\\\\", "\\\"", "\\'", "\\0", "\\n"
+            do i :+ 1
+            do result :~ @escapeSequenceToLlvmChar(es)
+        default
+            do result :~ literal[i].toStr()
+        end switch
+    end for
+    ret result ~ "\""
+end func
+
+func llvmStrLiteralToSize(literal: []char): int
+    {[n x i8]型でc"こういうリテラル"である場合しか考慮していない}
+    var size: int :: 0
+    for i(2, ^literal-2)
+        if(i<^literal-2)
+            switch(literal.sub(i, 2))
+            case "\\\\"
+                do i :+ 1
+                do size :+ 8
+                skip i
+            end switch
         end if
-        {[]char型で"こういうリテラル"である場合しか考慮していない}
-        var size: int :: 0
-        for i(1, ^literal.value-2) {両端はdouble-quoteなのでいらない}
-            do size :+ 8 * \stx@lenUtf8(literal.value[i]){TODO: エスケープシーケンスは？}
-        end for
-        ret size
-    else {?????}
-        do \util@crash("Invalid ary literal: both args and value are null")
-        ret -1
-    end if
+        if(i<^literal-3)
+            switch(literal.sub(i, 3))
+            case "\\22", "\\27", "\\00", "\\0A"
+                do i :+ 2
+                do size :+ 8
+                skip i
+            end switch
+        end if
+        do size :+ 8 * \stx@lenUtf8(literal[i])
+    end for
+    ret size
 end func
 
 func escapeSequenceToLlvmChar(escapeSequence: []char): []char
