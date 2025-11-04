@@ -385,8 +385,8 @@ func opToLlvm(node: \wreck1@ExprNode): []char
             do @unnamedLocal :+ 1
             do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-1}", @i(64))
         else
-            var lenByte: int :: elemType.size / 8
-            do llvm :~ @literalToLlvm(\wreck1@makeLiteralNode("\{lenByte}", \wreck1@int64()))
+            var byte: int :: elemType.size / 8
+            do llvm :~ @literalToLlvm(\wreck1@makeLiteralNode("\{byte}", \wreck1@int64()))
         end if
         do @unnamedLocal :+ 1
         do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 0)
@@ -394,6 +394,61 @@ func opToLlvm(node: \wreck1@ExprNode): []char
         do llvm :~ @zext("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-1}", @i(64))
         do @unnamedLocal :+ 1
         do llvm :~ @sdiv("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-1}", "%\{@unnamedLocal-3}")
+    case \wreck1@aryElemSymbol
+        ; まずi < ^aryか確認、つまりほぼlen
+        var elemType: @Type :: @typeToLlvmType(node.args[0].type.aryElemType)
+        if(elemType.defaultValue = "poison"){LLVMにおいてstructで表現される型。TODO: もっときれいな方法を作る}
+            do @unnamedLocal :+ 1
+            do llvm :~ @getelementptr("%\{@unnamedLocal}", elemType, "null", @i(32), 1)
+            do @unnamedLocal :+ 1
+            do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-1}", @i(32))
+        else
+            var byte: int :: elemType.size / 8
+            do llvm :~ @literalToLlvm(\wreck1@makeLiteralNode("\{byte}m", \wreck1@int32()))
+        end if
+        var byteExpr32: []char :: "%\{@unnamedLocal}"
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 0)
+        do @unnamedLocal :+ 1
+        do llvm :~ @sdiv("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-1}", "%\{@unnamedLocal-2}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @zext("%\{@unnamedLocal}", @i(32), "%\{@unnamedLocal-1}", @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @icmp("%\{@unnamedLocal}", "ult", @i(64), exprs[1], "%\{@unnamedLocal-1}")
+        var okLabel: []char :: "_ea\{@unnamedLocal}.ok"
+        var oorLabel: []char :: "_ea\{@unnamedLocal}.oor"
+        var endLabel: []char :: "_ea\{@unnamedLocal}.end"
+        do llvm :~ @br("%\{@unnamedLocal}", "%\{okLabel}", "%\{oorLabel}")
+        do llvm :~ "\{okLabel}:\n"
+        ; index in range, OK
+        do @unnamedLocal :+ 1
+        do llvm :~ @extractvalue("%\{@unnamedLocal}", @struct("%Ary"), exprs[0], 1)
+        do @unnamedLocal :+ 1
+        do llvm :~ @ptrtoint("%\{@unnamedLocal}", @ptr(), "%\{@unnamedLocal-1}", @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @zext("%\{@unnamedLocal}", @i(32), byteExpr32, @i(64))
+        do @unnamedLocal :+ 1
+        do llvm :~ @mul("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-1}", exprs[1])
+        do @unnamedLocal :+ 1
+        do llvm :~ @add("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-3}", "%\{@unnamedLocal-1}")
+        do @unnamedLocal :+ 1
+        do llvm :~ @inttoptr("%\{@unnamedLocal}", @i(64), "%\{@unnamedLocal-1}", @ptr())
+        var retPtrLabel: []char :: "%\{@unnamedLocal}"
+        do llvm :~ @unconditionalBr("%\{endLabel}")
+        do llvm :~ "\{oorLabel}:\n"
+        ; index out of range!
+        do @unnamedLocal :+ 1
+        do llvm :~ @alloca("%\{@unnamedLocal}", @array(@i(8), 42))
+        do llvm :~ @store(@array(@i(8), 42), "c\"Runtime Error: Array index out of range!\\0A\\00\"", "%\{@unnamedLocal}")
+        ; FIXME: エラーメッセージはstderrに出したい
+        do @unnamedLocal :+ 1
+        do llvm :~ "  call i32 (ptr, ...) @printf(ptr %\{@unnamedLocal-1})\n"
+        do @unnamedLocal :+ 1
+        do llvm :~ "  unreachable\n"
+        do llvm :~ @unconditionalBr("%\{endLabel}")
+        do llvm :~ "\{endLabel}:\n"
+        do @unnamedLocal :+ 1
+        do llvm :~ @load("%\{@unnamedLocal}", elemType, retPtrLabel)
     default
         do \util@crash("Operator \{node.op.symbol} has no corresponding LLVM representation yet")
     end switch
