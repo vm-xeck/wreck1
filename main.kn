@@ -6,5 +6,5 @@ func main()
 
     var tokens: list<[]char> :: \lex@tokenize(code)
     var ast: \wreck1@StmtNode :: \stx@parse(tokens)
-    do \llvm@print(ast)
+    ; do \llvm@print(ast)
 end func
