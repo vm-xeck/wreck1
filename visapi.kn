@@ -1,0 +1,8 @@
++func tokensToJson(tokens: list<[]char>): []char
+    ; TODO
+    ret #[0]char
+end func
+
++func astToJson(ast: \wreck1@StmtNode): []char
+    ret #[0]char
+end func
