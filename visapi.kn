@@ -1,8 +1,179 @@
-+func tokensToJson(tokens: list<[]char>): []char
-    ; TODO
-    ret #[0]char
++func toJson(tokens: list<[]char>, ast: \wreck1@StmtNode): []char
+    ret "{\"Token Stream\":" ~ @tokensToJson(tokens) ~ ",\"AST\":" ~ @astToJson(ast) ~ "}"
+end func
+
+func tokensToJson(tokens: list<[]char>): []char
+    var tokenJsons: [][]char :: #[0,0]char
+    do tokens.head()
+    while(!tokens.term())
+        var token: []char :: tokens.get()
+        var kind: []char
+        switch(token[0])
+        case 'A' to 'Z', 'a' to 'z'
+            do kind :: "ident"
+        case '0' to '9'
+            do kind :: "numLiteral"
+        case '\''
+            do kind :: "charLiteral"
+        case '$'
+            do kind :: "aggregateInitLiteral"
+        case '\"'
+            do kind :: "strLiteral"
+        case '['
+            do kind :: "aryTypeLiteral"
+        default
+            do kind :: "op" {おい}
+        end switch
+        do tokenJsons :~ ["{\"Name\":\"\{token}\",\"Kind\":\"\{kind}\"}"]
+        do tokens.next()
+    end while
+    ret "[" ~ tokenJsons.join(",") ~ "]"
 end func
 
 +func astToJson(ast: \wreck1@StmtNode): []char
-    ret #[0]char
+    var stmtJsons: [][]char :: #[0,0]char
+    do ast.stmts.head()
+    while(!ast.stmts.term())
+        do stmtJsons :~ [@stmtToJson(ast.stmts.get())]
+        do ast.stmts.next()
+    end while
+    ret "[" ~ stmtJsons.join(",") ~ "]"
+end func
+
+func stmtToJson(stmt: \wreck1@StmtNode): []char
+    switch(stmt.kind)
+    case %func_
+        var kind: []char :: "func"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        var argJsons: [][]char :: #[0,0]char
+        for i(0, ^stmt.args-1)
+            do argJsons :~ [stmtToJson(stmt.args[i])]
+        end for
+        var stmtJsons: [][]char :: #[0,0]char
+        do stmt.stmts.head()
+        while(!stmt.stmts.term())
+            do stmtJsons :~ [stmtToJson(stmt.stmts.get())]
+            do stmt.stmts.next()
+        end while
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"\{type}\",\"Args\":[\{argJsons.join(",")}],\"Stmts\":[\{stmtJsons.join(",")}]}"
+    case %funcArg
+        var kind: []char :: "funcArg"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"type\"}"
+    case %var_
+        var kind: []char :: "var"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        var expr: []char :: @exprToJson(stmt.expr)
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"\{type}\",\"Expr\":\{expr}}"
+    case %const_
+        var kind: []char :: "const"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        var expr: []char :: @exprToJson(stmt.expr)
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"\{type}\",\"Expr\":\{expr}}"
+    case %while_
+        var kind: []char :: "while"
+        var expr: []char :: @exprToJson(stmt.expr)
+        var stmtJsons: [][]char :: #[0,0]char
+        do stmt.stmts.head()
+        while(!stmt.stmts.term())
+            do stmtJsons :~ [stmtToJson(stmt.stmts.get())]
+            do stmt.stmts.next()
+        end while
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Expr\":\{expr},\"Stmts\":[\{stmtJsons.join(",")}]}"
+    case %ifContainer
+        var kind: []char :: "ifContainer"
+        var stmtJsons: [][]char :: #[0,0]char
+        do stmt.stmts.head()
+        while(!stmt.stmts.term())
+            do stmtJsons :~ [stmtToJson(stmt.stmts.get())]
+            do stmt.stmts.next()
+        end while
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Stmts\":[\{stmtJsons.join(",")}]}"
+    case %ifCase
+        var kind: []char :: "ifCase"
+        var expr: []char :: @exprToJson(stmt.expr)
+        var stmtJsons: [][]char :: #[0,0]char
+        do stmt.stmts.head()
+        while(!stmt.stmts.term())
+            do stmtJsons :~ [stmtToJson(stmt.stmts.get())]
+            do stmt.stmts.next()
+        end while
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Expr\":\"\{expr}\",\"Stmts\":[\{stmtJsons.join(",")}]}"
+    case %return
+        var kind: []char :: "return"
+        var type: []char :: stmt.type.name
+        var expr: []char :: @exprToJson(stmt.expr)
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Expr\":\{expr}}"
+    case %do_
+        var kind: []char :: "do"
+        var expr: []char :: @exprToJson(stmt.expr)
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Expr\":\{expr}}"
+    case %builtinFunc
+        var kind: []char :: "builtinFunc"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        var argJsons: [][]char :: #[0,0]char
+        for i(0, ^stmt.args-1)
+            do argJsons :~ [stmtToJson(stmt.args[i])]
+        end for
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"\{type}\",\"Args\":[\{argJsons.join(",")}]}"
+    case %builtinConst
+        var kind: []char :: "builtinConst"
+        var name: []char :: stmt.name
+        var type: []char :: stmt.type.name
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Name\":\"\{name}\",\"Type\":\"\{type}\"}"
+    end switch
+    ret null
+end func
+
+func exprToJson(expr: \wreck1@ExprNode): []char
+    if(expr =& null)
+        ret "null"
+    end if
+
+    switch(expr.kind)
+    case %funcCall
+        var kind: []char :: "funcCall"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.ref.name
+        var argJsons:[][]char :: #[0,0]char
+        for i(0, ^expr.args-1)
+            do argJsons :~ [exprToJson(expr.args[i])]
+        end for
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\",\"Args\":[\{argJsons.join(",")}]}"
+    case %varRef
+        var kind: []char :: "varRef"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.ref.name
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\"}"
+    case %constRef
+        var kind: []char :: "constRef"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.ref.name
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\"}"
+    case %funcArgRef
+        var kind: []char :: "funcArgRef"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.ref.name
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\"}"
+    case %op
+        var kind: []char :: "op"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.op.symbol
+        var argJsons: [][]char :: #[0,0]char
+        for i(0, ^expr.args-1)
+            do argJsons :~ [exprToJson(expr.args[i])]
+        end for
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\",\"Args\":[\{argJsons.join(",")}]}"
+    case %literal
+        var kind: []char :: "literal"
+        var type: []char :: expr.type.name
+        var value: []char :: expr.value
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\"}"
+    end switch
+    ret null
 end func
