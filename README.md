@@ -5,12 +5,12 @@ Wreck1コンパイラを改造してトークン列とASTをJSONで出力する�
 - ASTパースの手引き
 - 各オブジェクトの仕様
 ### ASTパースの手引き
-TODO: 存在する要素だけ見られるような参照順序
 ☆`AST`の各要素は種類によって異なるメンバをもっている(後述)ため、すべての要素がもつ判別用メンバをもとにアクセスするメンバを決める必要があります(分かりにくいかも…すみません…)
 
 次の手順がおすすめです
 1. `Stmt or Expr`を見て、"Stmt"なら文、"Expr"なら式です
 2. `Kind`を見ます
+
 文なら
 - "func"
 - "funcArg"
@@ -23,6 +23,7 @@ TODO: 存在する要素だけ見られるような参照順序
 - "do"
 - "builtinFunc"
 - "builtinConst"
+
 のどれか、式なら
 - "funcCall"
 - "varRef"
@@ -30,6 +31,7 @@ TODO: 存在する要素だけ見られるような参照順序
 - "funcArgRef"
 - "op"
 - "literal"
+
 のどれかです
 3. 下記の詳細を参考に、Kind毎に存在するメンバにだけアクセスします
 
@@ -63,7 +65,7 @@ TODO: 存在する要素だけ見られるような参照順序
     - 関数本体
 - funcArgノードは次のメンバをもちます
   - `Stmt or Expr`: string = "Stmt"
-  - `Kind`: string = "func▽寮g"
+  - `Kind`: string = "funcArg"
   - `Name`: string
     - 引数の名前
   - `Type`: string
@@ -94,14 +96,14 @@ TODO: 存在する要素だけ見られるような参照順序
   - `Stmts`: array
     - ループ本体
 - ifContainerノードは次のメンバをもちます
-> ひとつのif-elif-else分岐全体を保持するノードです
-> 複数のifCaseのみをもちます
+    - > ひとつのif-elif-else分岐全体を保持するノードです
+    - > 複数のifCaseのみをもちます
   - `Stmt or Expr`: string = "Stmt"
   - `Kind`: string = "ifContainer"
   - `Stmts`: array
     - 分岐の各選択肢
 - ifCaseノードは次のメンバをもちます
-> 分岐の選択肢(ifまたはelifまたはelse)を表します
+    - > 分岐の選択肢(ifまたはelifまたはelse)を表します
   - `Stmt or Expr`: string = "Stmt"
   - `Kind`: string = "ifCase"
   - `Expr`: object
@@ -144,4 +146,49 @@ TODO: 存在する要素だけ見られるような参照順序
   - `Kind`: string = "funcCall"
   - `Type`: string
     - 呼んでいる関数の型
-  - `Value`: object
+  - `Value`: string
+    - 呼んでいる関数の名前
+  - `Args`: array
+    - 与える引数たち
+- varRefノードは次のメンバをもちます
+  - `Stmt or Expr`: string = "Expr"
+  - `Kind`: string = "varRef"
+  - `Type`: string
+    - 参照している変数の型
+  - `Value`: string
+    - 参照している変数の名前
+- constRefノードは次のメンバをもちます
+  - `Stmt or Expr`: string = "Expr"
+  - `Kind`: string = "constRef"
+  - `Type`: string
+    - 参照している定数の型
+  - `Value`: string
+    - 参照している定数の名前
+- funcArgRefノードは次のメンバをもちます
+  - `Stmt or Expr`: string = "Expr"
+  - `Kind`: string = "funcArgRef"
+  - `Type`: string
+    - 参照している変数の型
+  - `Value`: string
+    - 参照している変数の名前
+- opノードは次のメンバをもちます
+  - `Stmt or Expr`: string = "Expr"
+  - `Kind`: string = "op"
+  - `Type`: string
+    - 演算が返す型
+  - `Value`: string
+    - 演算子の記号
+  - `Args`: array
+    - 演算子の項
+    - 二項演算子なら2個、単項なら1個
+- literalノードは次のメンバをもちます
+  - `Stmt or Expr`: string = "Expr"
+  - `Kind`: string = "literal"
+  - `Type`: string
+    - リテラルの型
+  - `Value`: string | null
+    - リテラルの値
+    - 配列でnullの場合があります
+  - `Args`: array | null
+    - 基本的にnullです
+    - 配列の各要素が入っていることがあります

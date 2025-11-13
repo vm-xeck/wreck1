@@ -172,8 +172,19 @@ func exprToJson(expr: \wreck1@ExprNode): []char
     case %literal
         var kind: []char :: "literal"
         var type: []char :: expr.type.name
-        var value: []char :: expr.value
-        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\"}"
+        var value: []char :: "null"
+        if(expr.value =& null)
+            do value :: expr.value
+        end if
+        var args: []char :: "null"
+        if(expr.args =& null)
+            var argJsons: [][]char :: #[0,0]char
+            for i(0, ^expr.args-1)
+                do argJsons :~ [exprToJson(expr.args[i])]
+            end for
+            do args :: "[" ~ argJson.join(",") ~ "]"
+        end if
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\", \"Args\":args}"
     end switch
     ret null
 end func
