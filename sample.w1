@@ -1,0 +1,31 @@
+const aiu: []char :: "This is a global const"
+var eo: uint8 #0uy, fyi#
+
+func factorial(n: int64): int64 {
+    if(n <= 1) {return 1}
+    else {return n * factorial(n - 1)}
+}
+
+func main(): int8 {
+    const ary: []float32 :: [23.f, 0.6f, 3.14f]
+    do print_float64(
+        int64_to_float64(
+            int32_to_int64(
+                float32_to_int32(ary[2])
+            )
+        )
+    )
+    do print_newline()
+    do 32 + 14 / 4142
+    if(false) {
+        return 1y
+    } elif(false) {
+        return 2y
+    }
+    do print_int64(factorial(6)) do print_newline()
+    var i: int8 :: 5y
+    while(i > 0y) {
+        do i <- i - 1y
+    }
+    return i
+}

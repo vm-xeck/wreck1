@@ -7,6 +7,9 @@ func tokensToJson(tokens: list<[]char>): []char
     do tokens.head()
     while(!tokens.term())
         var token: []char :: tokens.get()
+        if(token[0] = '\"')
+            do token :: "\\\"" ~ token.sub(1, ^token-2) ~ "\\\""
+        end if
         var kind: []char
         switch(token[0])
         case 'A' to 'Z', 'a' to 'z'
@@ -102,7 +105,7 @@ func stmtToJson(stmt: \wreck1@StmtNode): []char
             do stmtJsons :~ [stmtToJson(stmt.stmts.get())]
             do stmt.stmts.next()
         end while
-        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Expr\":\"\{expr}\",\"Stmts\":[\{stmtJsons.join(",")}]}"
+        ret "{\"Stmt or Expr\":\"Stmt\",\"Kind\":\"\{kind}\",\"Expr\":\{expr},\"Stmts\":[\{stmtJsons.join(",")}]}"
     case %return
         var kind: []char :: "return"
         var type: []char :: stmt.type.name
@@ -173,18 +176,21 @@ func exprToJson(expr: \wreck1@ExprNode): []char
         var kind: []char :: "literal"
         var type: []char :: expr.type.name
         var value: []char :: "null"
-        if(expr.value =& null)
+        if(expr.value<>&null & ^expr.value>0)
             do value :: expr.value
+            if(value[0] = '\"')
+                do value :: "\\\"" ~ value.sub(1, ^value-2) ~ "\\\""
+            end if
         end if
         var args: []char :: "null"
-        if(expr.args =& null)
+        if(expr.args<>&null & ^expr.args>0)
             var argJsons: [][]char :: #[0,0]char
             for i(0, ^expr.args-1)
                 do argJsons :~ [exprToJson(expr.args[i])]
             end for
-            do args :: "[" ~ argJson.join(",") ~ "]"
+            do args :: "[" ~ argJsons.join(",") ~ "]"
         end if
-        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\", \"Args\":args}"
+        ret "{\"Stmt or Expr\":\"Expr\",\"Kind\":\"\{kind}\",\"Type\":\"\{type}\",\"Value\":\"\{value}\",\"Args\":\{args}}"
     end switch
     ret null
 end func
